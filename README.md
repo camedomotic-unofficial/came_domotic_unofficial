@@ -1,2 +1,2 @@
-# came_domotic_unofficial
+# CAME Domotic unofficial
 Library to interact with a CAME ETI/Domo domotic server.
