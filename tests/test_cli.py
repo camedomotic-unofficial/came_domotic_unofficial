@@ -12,35 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from came_domotic_unofficial import _LOGGER
-from came_domotic_unofficial.client import CameDomoticServer
-from came_domotic_unofficial.const import EntityType
+
+"""
+This module contains the tests for the CLI.
+"""
+
+from came_domotic_unofficial import CameETIDomoServer
 
 
-def test_real_authenticate():
+def test_main():
     """
-    Entry point for the CLI.
+    Test the main function of the CLI.
     """
-    server = CameDomoticServer("192.168.1.3", "my_user", "my_pwd")
-    server.ensure_authentication()
-    print(server._session_id)
-    print(server._session_expiration_datetime)
 
+    try:
+        server = CameETIDomoServer("192.168.0.0")
+        server.login("user", "pwd")
+        server.update_lists()
 
-def test_real_get_lights_list():
-    """
-    Entry point for the CLI.
-    """
-    server = CameDomoticServer("192.168.1.3", "my_user", "my_pwd")
-    server.ensure_authentication()
+        for feature in server.items:
+            print(f'Feature "{feature}" has {len(feature)} elements.')
 
-    entities = server.get_entities(EntityType.LIGHT)
+        return
+    except Exception as e:
+        print(f"Error: {e}")
+        return
 
-    # Print each entity
-    _LOGGER.info("Printing all the entitie")
-
-    for entity in entities:
-        _LOGGER.info(entity)
-
-    print(server._session_id)
-    print(server._session_expiration_datetime)
+    # Perform actions on the server instance
+    # For example, if CameETIDomoServer has a method named 'start':
+    # server.start()

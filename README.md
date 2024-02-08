@@ -18,8 +18,18 @@ limitations under the License.
 
 Library to interact with a CAME ETI/Domo domotic server.
 
-Please note that the library is still in  __pre-alpha__ development.
+## Acknowledgments
+
+Special thanks to Andrea Michielan for his [eti_domo]([eti_domo](https://github.com/andrea-michielan/eti_domo)) library, 
+which significantly facilitated the development process of this library. 
+His work was very helpful and greatly appreciated.
 
 ## Disclaimer
 
-This library is not affiliated with or endorsed by [CAME](https://www.came.com/).
+This library is not affiliated with or endorsed or supported 
+by [CAME](https://www.came.com/). Use at your own risk.
+
+**Important:** This library is currently in a pre-alpha development state. 
+It is not yet stable and should be used only for studying purposes. 
+Please be aware that you cannot rely on it for any production use. 
+Use at your own risk.

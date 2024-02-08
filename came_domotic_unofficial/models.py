@@ -142,7 +142,27 @@ class CameEntitiesSet(set):
         super().add(item)
 
 
-# Light entity class
+class Feature(CameEntity):
+    """
+    Represents a CAME feature.
+    """
+
+    def __init__(self, *, name: str):
+        """
+        Constructor for the Feature class.
+
+        :param id: the feature ID
+        :param name: the feature name
+        :param status: the feature status
+        """
+        super().__init__(
+            entity_id=hash(name),
+            name=name,
+            entity_type=EntityType.FEATURE,
+            status=EntityStatus.NONE,
+        )
+
+
 class Light(CameEntity):
     """
     Represents a CAME light.
