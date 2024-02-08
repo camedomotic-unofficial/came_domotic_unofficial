@@ -20,7 +20,7 @@ Library to interact with a CAME ETI/Domo domotic server.
 
 ## Acknowledgments
 
-Special thanks to Andrea Michielan for his [eti_domo]([eti_domo](https://github.com/andrea-michielan/eti_domo)) library, 
+Special thanks to Andrea Michielan for his [eti_domo](https://github.com/andrea-michielan/eti_domo) library,
 which significantly facilitated the development process of this library. 
 His work was very helpful and greatly appreciated.
 
