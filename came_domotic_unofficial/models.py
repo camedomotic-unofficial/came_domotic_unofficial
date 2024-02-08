@@ -49,10 +49,10 @@ class CameDomoticRemoteServerError(CameDomoticError):
     """
 
 
-class CameDomoticResponseDataError(CameDomoticError):
+class CameDomoticRequestError(CameDomoticError):
     """
-    Exception raised when there is an error related to
-    the Came Domotic server response.
+    Exception raised when there is an error when sending a request
+    to the Came Domotic server.
     """
 
 
@@ -79,7 +79,7 @@ class CameEntity:
         :param status: the entity status
         """
         self._id = entity_id
-        self._name = name
+        self._name = "Unknown" if name is None or name == "" else name
         self._entity_type = entity_type
         self._status = status
 
@@ -137,10 +137,8 @@ class CameEntitiesSet(set):
 
     def add(self, item):
         if not isinstance(item, CameEntity):
-            _LOGGER.warning(
-                "Item must be of type MyClass. Type: %s", type(item)
-            )
-            return
+            _LOGGER.error("Item must be of type MyClass. Type: %s", type(item))
+            raise TypeError("Item must be of type CameEntity")
         super().add(item)
 
 

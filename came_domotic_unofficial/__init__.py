@@ -38,7 +38,7 @@ except PackageNotFoundError:
 _LOGGER = logging.getLogger(__package__)
 formatter = logging.Formatter(
     "%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(module)s \
-        - %(funcName)s - %(lineno)d"
+        - %(funcName)s (line %(lineno)d)"
 )
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setFormatter(formatter)

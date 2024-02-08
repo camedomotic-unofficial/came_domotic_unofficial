@@ -22,7 +22,7 @@ def test_real_authenticate():
     Entry point for the CLI.
     """
     server = CameDomoticServer("192.168.1.3", "my_user", "my_pwd")
-    server._ensure_authentication()
+    server.ensure_authentication()
     print(server._session_id)
     print(server._session_expiration_datetime)
 
@@ -32,7 +32,7 @@ def test_real_get_lights_list():
     Entry point for the CLI.
     """
     server = CameDomoticServer("192.168.1.3", "my_user", "my_pwd")
-    server._ensure_authentication()
+    server.ensure_authentication()
 
     entities = server.get_entities(EntityType.LIGHT)
 
