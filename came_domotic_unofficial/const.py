@@ -60,36 +60,3 @@
 #     MANUAL = 1
 #     AUTO = 2
 #     JOLLY = 3
-
-
-# # Enum listing all the CAME entity types
-# class EntityType(Enum):
-#     LIGHT = None
-#     ALL = None
-#     # RELAY = None
-#     # CAMERA = None
-#     # TIMER = None
-#     # THERMOREGULATION = None
-#     # ANALOGIN = None
-#     # DIGITALIN = None
-#     FEATURE = None
-#     # USER = None
-#     # MAP = None
-
-
-# # Enum listing all the CAME entity status
-
-
-# class EntityStatus(Enum):
-#     ON = 1
-#     OFF = 0
-#     OPEN = 1
-#     CLOSE = 0
-#     TRIGGERED = 1
-#     NONE = None
-
-
-# class LightType(Enum):
-#     ON_OFF = "STEP_STEP"
-#     DIMMERABLE = "DIMMER"
-#     UNKNOWN = None

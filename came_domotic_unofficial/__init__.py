@@ -22,92 +22,58 @@ Disclaimer:
 This library is not affiliated with or endorsed by CAME.
 """
 
-# import sys
-# import logging
-# from importlib.metadata import version, PackageNotFoundError
-
-# # Get the package version
-# try:
-#     __version__ = version(__name__)
-# except PackageNotFoundError:
-#     # package is not installed
-#     __version__ = "unknown"
-
-
-# # Create a logger for the package
-# _LOGGER = logging.getLogger(__package__)
-# formatter = logging.Formatter(
-#     "%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(module)s \
-#         - %(funcName)s (line %(lineno)d)"
-# )
-# console_handler = logging.StreamHandler(sys.stdout)
-# console_handler.setFormatter(formatter)
-# _LOGGER.addHandler(console_handler)
-# _LOGGER.setLevel(logging.DEBUG)
-
-# # Write the message "Initialization completed" to the log
-# _LOGGER.info("Package initialization completed")
-
-
-# def get_logger():
-#     """
-#     Returns the package logger, allowing to reconfigure it
-#     from the main program.
-#     """
-#     return _LOGGER
-
-
+import json
+import sys
+import logging
+from importlib.metadata import version, PackageNotFoundError
 import requests
 
+from came_domotic_unofficial.models import (
+    CameDomoticServerNotFoundError,
+    CameDomoticRequestError,
+    CommandNotFound,
+)
 
-# region Exceptions
-class CameDomoticError(Exception):
+# Get the package version
+try:
+    __version__ = version(__name__)
+except PackageNotFoundError:
+    # package is not installed
+    __version__ = "unknown"
+
+
+# Create a logger for the package
+_LOGGER = logging.getLogger(__package__)
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(module)s \
+        - %(funcName)s (line %(lineno)d)"
+)
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setFormatter(formatter)
+_LOGGER.addHandler(console_handler)
+_LOGGER.setLevel(logging.DEBUG)
+
+
+def get_logger():
     """
-    Base exception class for the Came Domotic package.
+    Returns the package logger, allowing to reconfigure it
+    from the main program.
     """
+    return _LOGGER
 
 
-class CameDomoticServerNotFoundError(CameDomoticError):
-    """Raised when the specified host is not available"""
-
-
-# Authentication exception class
-class CameDomoticAuthError(CameDomoticError):
-    """
-    Exception raised when there is an authentication error
-    with the remote server.
-    """
-
-
-# Server exception class
-class CameDomoticRemoteServerError(CameDomoticError):
-    """
-    Exception raised when there is an error related to the Came Domotic server.
-    """
-
-
-class CameDomoticRequestError(CameDomoticError):
-    """Raised when a user send an invalid request to the server"""
-
-
-class CommandNotFound(CameDomoticError):
-    """
-    Raised if the user tries to send a command to the server that
-    does not exists
-    """
-
-
-# endregion
 class CameETIDomoServer:
     """
     Class that represents a Came ETI/Domo server.
     """
 
     # Header for every http request made to the server
-    _http_headers = {
+    _HTTP_HEADERS = {
         "Content-Type": "application/x-www-form-urlencoded",
         "Connection": "Keep-Alive",
     }
+
+    _HTTP_TIMEOUT = 10  # seconds
 
     # Dictionary of available commands
     _available_commands = {
@@ -129,12 +95,6 @@ class CameETIDomoServer:
         "maps": "map_descr_req",
     }
 
-    # Dictionary of seasons available
-    seasons = {"off": "plant_off", "winter": "winter", "summer": "summer"}
-
-    # Dictionary of thermo zone status
-    thermo_status = {0: "off", 1: "man", 2: "auto", 3: "jolly"}
-
     def __init__(self, host: str):
         """
         Instantiate a new :class:`Object` of type :class:`Domo`
@@ -147,17 +107,20 @@ class CameETIDomoServer:
         # Wrap the host ip in a http url
         self._host = "http://" + host + "/domo/"
         # The sequence start from 1
-        self._cseq = 1
+        self._cseq = 0
         # Session id for the client
         self.id = ""
 
         # List of items managed by the server
-        self.items = {}
-
-        # Check if the host is available
-        response = requests.get(
-            self._host, headers=self._http_headers, timeout=10
-        )
+        self.entities = {}
+        try:
+            # Check if the host is available
+            response = requests.get(
+                self._host, headers=self._HTTP_HEADERS, timeout=10
+            )
+        except requests.exceptions.ConnectionError:
+            self._host = ""
+            raise CameDomoticServerNotFoundError
 
         # If not then raise an exception
         if not response.status_code == 200:
@@ -177,20 +140,18 @@ class CameETIDomoServer:
         """
 
         # Create the login request
-        login_parameters = (
-            'command={"sl_cmd":"sl_registration_req","sl_login":"'
-            + str(username)
-            + '","sl_pwd":"'
-            + str(password)
-            + '"}'
-        )
+        request_data = {
+            "sl_cmd": "sl_registration_req",
+            "sl_login": username,
+            "sl_pwd": password,
+        }
 
         # Send the post request with the login parameters
         response = requests.post(
             self._host,
-            params=login_parameters,
-            headers=self._http_headers,
-            timeout=10,
+            data={"command": json.dumps(request_data)},
+            headers=self._HTTP_HEADERS,
+            timeout=self._HTTP_TIMEOUT,
         )
 
         # Set the client id for the session
@@ -217,7 +178,7 @@ class CameETIDomoServer:
         response = requests.post(
             self._host,
             params=parameters,
-            headers=self._http_headers,
+            headers=self._HTTP_HEADERS,
             timeout=10,
         )
 
@@ -238,7 +199,7 @@ class CameETIDomoServer:
             # Get the json response from the server
             tmp_list = self.list_request(self._available_commands[feature])
             # Parse the json into a more readable and useful structure
-            self.items[feature] = tmp_list
+            self.entities[feature] = tmp_list
 
     def list_request(self, cmd_name) -> dict:
         """
@@ -293,7 +254,7 @@ class CameETIDomoServer:
 
         # Send the post request
         response = requests.post(
-            self._host, params=param, headers=self._http_headers, timeout=10
+            self._host, params=param, headers=self._HTTP_HEADERS, timeout=10
         )
 
         # Get a json dictionary from the response
@@ -346,7 +307,7 @@ class CameETIDomoServer:
 
         # Send the post request
         response = requests.post(
-            self._host, params=param, headers=self._http_headers, timeout=10
+            self._host, params=param, headers=self._HTTP_HEADERS, timeout=10
         )
 
         # Increment the cseq counter
@@ -402,7 +363,7 @@ class CameETIDomoServer:
 
         # Send the post request
         response = requests.post(
-            self._host, params=param, headers=self._http_headers, timeout=10
+            self._host, params=param, headers=self._HTTP_HEADERS, timeout=10
         )
 
         # Increment the cseq counter
@@ -448,7 +409,7 @@ class CameETIDomoServer:
 
         # Send the post request
         response = requests.post(
-            self._host, params=param, headers=self._http_headers, timeout=10
+            self._host, params=param, headers=self._HTTP_HEADERS, timeout=10
         )
 
         # Increment the cseq counter
