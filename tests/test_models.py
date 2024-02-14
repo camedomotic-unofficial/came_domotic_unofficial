@@ -357,14 +357,14 @@ def test_opening_initialization(entity_id, name, status, cover_type):
         entity_id + 1,
         name,
         status=status,
-        cover_type=cover_type,
+        opening_type=cover_type,
     )
 
     assert opening.id == entity_id
     assert opening.close_entity_id == entity_id + 1
     assert opening.name == name
     assert opening.status == status
-    assert opening.cover_type == cover_type
+    assert opening.opening_type == cover_type
     assert not opening.partial_openings  # an empty list is falsey
     assert opening.type == Opening
 
@@ -383,7 +383,7 @@ def test_opening_initialization_defaults(entity_id):
     assert opening.close_entity_id == entity_id
     assert opening.name == "Unknown"
     assert opening.status == EntityStatus.ON_OPEN
-    assert opening.cover_type == OpeningType.OPEN_CLOSE
+    assert opening.opening_type == OpeningType.OPEN_CLOSE
     assert not opening.partial_openings  # an empty list is falsey
 
 
@@ -423,7 +423,7 @@ def test_opening_from_json_valid(open_act_id, name, status, cover_type):
     assert opening.close_entity_id == open_act_id + 1
     assert opening.name == name
     assert opening.status == status
-    assert opening.cover_type == cover_type
+    assert opening.opening_type == cover_type
     assert not opening.partial_openings  # an empty list is falsey
     assert opening.type == Opening
 
@@ -446,7 +446,7 @@ def test_opening_from_json_missing_optional_key(open_act_id):
     assert opening.close_entity_id == open_act_id
     assert opening.name == "Unknown"
     assert opening.status == EntityStatus.ON_OPEN
-    assert opening.cover_type == OpeningType.OPEN_CLOSE
+    assert opening.opening_type == OpeningType.OPEN_CLOSE
     assert not opening.partial_openings  # an empty list is falsey
     assert opening.type == Opening
 

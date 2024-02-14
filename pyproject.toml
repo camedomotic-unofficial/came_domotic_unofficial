@@ -18,7 +18,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "came_domotic_unofficial-fredericks1982"
-version = "0.2.0"
+version = "0.3.0"
 description = "Library to interact with a CAME ETI/Domo domotic server"
 authors = [{ name = "fredericks1982", email = "fredericks1982@gmail.com" }]
 maintainers = [{ name = "fredericks1982", email = "fredericks1982@gmail.com" }]
@@ -40,8 +40,17 @@ classifiers = [
     "Topic :: Home Automation",
     "Operating System :: OS Independent",
 ]
-# dependencies = ["requests"]
-
+dependencies = [
+    "functools",
+    "datetime",
+    "json",
+    "logging",
+    "importlib",
+    "traceback",
+    "requests",
+]
+# additional tests dependencies = [
+# "pytest", "pytest-cov", "hypothesis", "unittest"]
 [project.urls]
 Homepage = "https://github.com/fredericks1982/came_domotic_unofficial"
 Issues = "https://github.com/fredericks1982/came_domotic_unofficial/issues"

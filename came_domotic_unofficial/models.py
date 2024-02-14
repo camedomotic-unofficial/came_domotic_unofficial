@@ -53,10 +53,21 @@ class CameDomoticRequestError(CameDomoticError):
     """Raised when a user send an invalid request to the server"""
 
 
-class CommandNotFound(CameDomoticError):
+class CameDomoticBadAckError(CameDomoticRequestError):
+    """Raised when the server returns a bad ack reason"""
+
+
+class CommandNotFoundError(CameDomoticError):
     """
     Raised if the user tries to send a command to the server that
     does not exists
+    """
+
+
+class FeatureNotSupportedError(CameDomoticError):
+    """
+    Raised if the user tries to use a feature to get a list of entities
+    that are not supported by the CAME ETI/Domo server
     """
 
 
@@ -69,19 +80,46 @@ class CameEnum(Enum):
 
 
 class EntityType(CameEnum):
-    """Enum listing all the CAME entity types."""
+    """
+    Enum listing all the CAME entity types.
 
-    FEATURE = None
-    LIGHT = None
-    OPENING = None
-    RELAY = None
-    CAMERA = None
-    TIMER = None
-    THERMOREGULATION = None
-    ANALOGIN = None
-    DIGITALIN = None
-    USER = None
-    MAP = None
+    The :name of each enum member maps to feature.name.upper(),
+    where feature is a Feature instance.
+
+    The :value of each enum member is the command to retrieve the list of items
+    related to that entity type.
+
+    """
+
+    FEATURES = "feature_list_req"
+    LIGHTS = "light_list_req"
+    # LIGHTS = "nested_light_list_req"
+    OPENINGS = "openings_list_req"
+    # OPENINGS = "nested_openings_list_req"
+    # UPDATE = "status_update_req"
+    # RELAYS = "relays_list_req"
+    # CAMERAS = "tvcc_cameras_list_req"
+    # TIMERS = "timers_list_req"
+    # THERMOREGULATION = "thermo_list_req"
+    # ANALOGIN = "analogin_list_req"
+    # DIGITALIN = "digitalin_list_req"
+    # USERS = "sl_users_list_req"
+    # MAPS = "map_descr_req"
+
+
+# available_commands = {
+#         "update": "status_update_req",
+#         "relays": "relays_list_req",
+#         "cameras": "tvcc_cameras_list_req",
+#         "timers": "timers_list_req",
+#         "thermoregulation": "thermo_list_req",
+#         "analogin": "analogin_list_req",
+#         "digitalin": "digitalin_list_req",
+#         "lights": "nested_light_list_req",
+#         "features": "feature_list_req",
+#         "users": "sl_users_list_req",
+#         "maps": "map_descr_req"
+#     }
 
 
 class EntityStatus(CameEnum):
@@ -99,6 +137,8 @@ class LightType(CameEnum):
 
 
 class OpeningType(CameEnum):
+    """Enum listing the opening types."""
+
     OPEN_CLOSE = 0
 
 
@@ -129,10 +169,12 @@ class CameEntity:
     Base class for all the CAME entities.
     """
 
+    _DEFAULT_NAME = "Unknown"
+
     def __init__(
         self,
         entity_id: int,
-        name: str = None,
+        name: str = _DEFAULT_NAME,
         *,
         status: EntityStatus = None,
     ):
@@ -140,12 +182,12 @@ class CameEntity:
         Constructor for the CameEntity class.
 
         :param id: the entity ID
-        :param name: the entity name ("Unkwnon" if None or empty)
+        :param name: the entity name ("Unknown" if None or empty)
         :param status: the entity status (can be None for some entities)
         """
 
         self._id = entity_id
-        self._name = "Unknown" if name is None or name == "" else name
+        self._name = self._DEFAULT_NAME if name is None or name == "" else name
         self._status = status
 
     @property
@@ -184,22 +226,18 @@ class CameEntity:
         self._status = value
 
     def __str__(self) -> str:
-        return f"{self.type.__name__} #{self.id}: {self.name} - Status: \
-                {self.status.name if self.status else 'None'}"
+        return (
+            f"{self.type.__name__} #{self.id}: {self.name} - Status: "
+            f"{self.status.name if self.status else 'None'}"
+        )
 
-    #  Entities with same entity type and ID are the same entity)
-
-    # Override the equality operator
-    def __eq__(self, other):
-        return self.type == other.type and self.id == other.id
-
-    # Override the inequality operator
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    # Override the hash function
-    def __hash__(self):
-        return hash((self.type, self.id))
+    def __repr__(self) -> str:
+        return (
+            f'{self.type.__name__}({self.id},"{self.name}",'
+            f"status={self.status})"
+            if self.status
+            else f'{self.type.__name__}({self.id},"{self.name}")'
+        )
 
 
 class CameEntitiesSet(set):
@@ -232,20 +270,63 @@ class Feature(CameEntity):
             name=name,
         )
 
+    @property
+    def name(self) -> str:
+        """
+        Returns the feature name.
+        """
+        return self._name
+
+    def __str__(self) -> str:
+        return f"{self.type.__name__}: {self.name}"
+
+    def __repr__(self) -> str:
+        return f'{self.type.__name__}("{self.name}")'
+
+    # Override the equality operator: features with the same name are the same
+    def __eq__(self, other):
+        return self.type == other.type and self.name == other.name
+
+    # Override the inequality operator
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    # Override the hash function
+    def __hash__(self):
+        return hash((self.type, self.name))
+
+
+class FeaturesSet(set):
+    """
+    Represents a set of features managed by a CAME ETI/Domo server.
+    """
+
+    def add(self, item):
+        if not isinstance(item, Feature):
+            # _LOGGER.error(
+            #     "Item must be of type 'CameEntity'. Type: %s", type(item)
+            # )
+            raise TypeError("Item must be of type 'Feature'")
+        super().add(item)
+
 
 class Light(CameEntity):
     """
     Represents a CAME light.
     """
 
+    _DEFAULT_STATUS = EntityStatus.OFF_CLOSED
+    _DEFAULT_LIGHT_TYPE = LightType.ON_OFF
+    _DEFAULT_BRIGHTNESS = 100
+
     def __init__(
         self,
         entity_id: int,
         name: str = None,
         *,
-        status: EntityStatus = EntityStatus.OFF_CLOSED,
-        light_type: LightType = LightType.ON_OFF,
-        brightness: int = 100,
+        status: EntityStatus = _DEFAULT_STATUS,
+        light_type: LightType = _DEFAULT_LIGHT_TYPE,
+        brightness: int = _DEFAULT_BRIGHTNESS,
     ):
         """
         Constructor for the Came Light class.
@@ -254,24 +335,18 @@ class Light(CameEntity):
         :param name: the light name
         :param status: the light status (default: OFF)
         :param light_type: the light type (default: ON_OFF)
-        :param brightness: the light brightness (default: 100)
+        :param brightness: the light brightness (range: 0-100, default: 100)
         """
 
         self._light_type = light_type
 
         # Set brightness, with range from 0 to 100
-        if brightness < 0:
+        if brightness is None:
+            self._brightness = 100
+        elif brightness < 0:
             self._brightness = 0
-            # _LOGGER.warning(
-            #     "Invalid brightness (%s) setting to 0.",
-            #     brightness,
-            # )
         elif brightness > 100:
             self._brightness = 100
-            # _LOGGER.warning(
-            #     "Invalid brightness (%s), setting to 100.",
-            #     brightness,
-            # )
         else:
             self._brightness = brightness
 
@@ -279,6 +354,48 @@ class Light(CameEntity):
             entity_id,
             name,
             status=status,
+        )
+
+    # Properties
+    @property
+    def brightness(self) -> int:
+        """
+        Returns the light brightness.
+        """
+        return self._brightness
+
+    @brightness.setter
+    def brightness(self, value: int):
+        """
+        Sets the light brightness.
+        """
+        if value is None or value < 0 or value > 100:
+            raise ValueError("The brightness value must be between 0 and 100")
+        self._brightness = value
+
+    @property
+    def light_type(self) -> LightType:
+        """
+        Returns the light type.
+        """
+        return self._light_type
+
+    def __str__(self) -> str:
+        result = (
+            f"{self.type.__name__} #{self.id}: {self.name} - "
+            f"Type: ({self.light_type.name}) - Status: {self.status.name}"
+        )
+
+        if self.light_type == LightType.DIMMABLE:
+            result += f" - Brightness: {self.brightness}"
+
+        return result
+
+    def __repr__(self) -> str:
+        return (
+            f'{self.type.__name__}({self.id},"{self.name}",'
+            f"status={self.status},light_type={self.light_type},"
+            f"brightness={self.brightness})"
         )
 
     @staticmethod
@@ -295,55 +412,43 @@ class Light(CameEntity):
         # 	"floor_ind":6,
         # 	"room_ind": 9,
         # 	"status": 0,
-        # 	"type": "STEP_STEP"
+        # 	"type":	"DIMMER",
+        #   "perc":	66
         # }
+        # status, type, perc
 
-        result = Light(
-            entity_id=json_data["act_id"],
-            name=json_data["name"] if "name" in json_data else None,
+        return Light(
+            json_data["act_id"],
+            (
+                json_data["name"]
+                if "name" in json_data
+                else CameEntity._DEFAULT_NAME
+            ),
             status=(
                 EntityStatus(json_data["status"])
                 if "status" in json_data
-                else EntityStatus.OFF_CLOSED
+                else Light._DEFAULT_STATUS
             ),
             light_type=(
                 LightType(json_data["type"])
                 if "type" in json_data
-                else LightType.ON_OFF
+                else Light._DEFAULT_LIGHT_TYPE
+            ),
+            brightness=(
+                json_data["perc"]
+                if "perc" in json_data
+                else Light._DEFAULT_BRIGHTNESS
             ),
         )
-
-        return result
-
-    # Properties
-    @property
-    def brightness(self) -> int:
-        """
-        Returns the light brightness.
-        """
-        return self._brightness
-
-    @brightness.setter
-    def brightness(self, value: int):
-        """
-        Sets the light brightness.
-        """
-        if value < 0 or value > 100:
-            raise ValueError("The brightness must be between 0 and 100")
-        self._brightness = value
-
-    @property
-    def light_type(self) -> LightType:
-        """
-        Returns the light type.
-        """
-        return self._light_type
 
 
 class Opening(CameEntity):
     """
     Represents a CAME opening.
     """
+
+    _DEFAULT_STATUS = EntityStatus.OFF_CLOSED
+    _DEFAULT_OPENING_TYPE = OpeningType.OPEN_CLOSE
 
     def __init__(
         self,
@@ -352,7 +457,7 @@ class Opening(CameEntity):
         name: str = None,
         *,
         status: EntityStatus = EntityStatus.ON_OPEN,
-        cover_type: OpeningType = OpeningType.OPEN_CLOSE,
+        opening_type: OpeningType = OpeningType.OPEN_CLOSE,
         partial_openings: list = None,
     ):
         """
@@ -366,10 +471,10 @@ class Opening(CameEntity):
         :param partial_openings: the list of partial openings (default: empty)
         """
 
-        self._cover_type = cover_type
         self._close_entity_id = (
             close_entity_id if close_entity_id else entity_id
         )
+        self._opening_type = opening_type
         self._partial_openings = partial_openings if partial_openings else []
 
         super().__init__(
@@ -380,11 +485,11 @@ class Opening(CameEntity):
 
     # Properties
     @property
-    def cover_type(self) -> OpeningType:
+    def opening_type(self) -> OpeningType:
         """
         Returns the cover type.
         """
-        return self._cover_type
+        return self._opening_type
 
     @property
     def close_entity_id(self) -> int:
@@ -408,6 +513,21 @@ class Opening(CameEntity):
     #     """
     #     self._partial_openings = value
 
+    def __str__(self) -> str:
+        return (
+            f"{self.type.__name__} #{self.id}/{self.close_entity_id}: "
+            f"{self.name} - Type: {self.opening_type} - "
+            f"Status: {self.status.name} - Partials: {self.partial_openings}"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.type.__name__}({self.id},{self.close_entity_id},"
+            f'"{self.name}",status={self.status},'
+            f"opening_type={self.opening_type},"
+            f"partial_openings={self.partial_openings})"
+        )
+
     @staticmethod
     def from_json(json_data: dict):
         """
@@ -428,27 +548,51 @@ class Opening(CameEntity):
         #    "type": 0
         # }
 
-        result = Opening(
+        return Opening(
             entity_id=json_data["open_act_id"],
             close_entity_id=(
                 json_data["close_act_id"]
                 if "close_act_id" in json_data
                 else json_data["open_act_id"]
             ),
-            name=json_data["name"] if "name" in json_data else None,
+            name=(
+                json_data["name"]
+                if "name" in json_data
+                else CameEntity._DEFAULT_NAME
+            ),
             status=(
                 EntityStatus(json_data["status"])
                 if "status" in json_data
-                else EntityStatus.ON_OPEN
+                else Opening._DEFAULT_STATUS
             ),
-            cover_type=(
+            opening_type=(
                 OpeningType(json_data["type"])
                 if "type" in json_data
-                else OpeningType.OPEN_CLOSE
+                else Opening._DEFAULT_OPENING_TYPE
+            ),
+            partial_openings=(
+                json_data["partial"] if "partial" in json_data else []
             ),
         )
 
-        return result
 
+# endregion
+
+# region Mappers
+
+EntityType2Class = {
+    EntityType.FEATURES: Feature,
+    EntityType.LIGHTS: Light,
+    EntityType.OPENINGS: Opening,
+    # EntityType.UPDATE:
+    # EntityType.RELAYS:
+    # EntityType.CAMERAS:
+    # EntityType.TIMERS:
+    # EntityType.THERMOREGULATION:
+    # EntityType.ANALOGIN:
+    # EntityType.DIGITALIN:
+    # EntityType.USERS:
+    # EntityType.MAPS:
+}
 
 # endregion

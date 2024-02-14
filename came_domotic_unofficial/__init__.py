@@ -12,27 +12,57 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Library to exchange data with a CAME Domotic server (ETI/Domo).
 
-This library provides a Python interface allowing to interact
-with a CAME ETI/Domo server.
-
-Disclaimer:
-This library is not affiliated with or endorsed by CAME.
 """
+This library allows to interact with a CAME ETI/Domo server.
+
+The login to the remote server is managed by the library, and performed only
+when required. You can always check the status of the server with the
+is_authenticated property.
+
+The library is based on the HTTP messages exchanged by the CAME Domotic Android
+app. The library is not complete and does not cover all the features
+of a CAME ETI/Domo server.
+
+The library is not official and is not supported by CAME.
+Use it at your own risk
+
+
+Usage:
+    from came_domotic_unofficial import CameETIDomoServer
+
+    server = CameETIDomoServer("192.168.0.0", "username", "password")
+    features = server.get_features() # list of available features
+    entities = server.get_entities() # list of managed entities
+    server.set_entity_status(entities[0], EntityStatus.ON)
+    server.logout()
+"""
+
+from functools import wraps
+import sys
+
+from datetime import datetime, timezone, timedelta
 
 import json
-import sys
 import logging
 from importlib.metadata import version, PackageNotFoundError
+import traceback
 import requests
 
 from came_domotic_unofficial.models import (
+    CameDomoticBadAckError,
     CameDomoticServerNotFoundError,
+    CameDomoticAuthError,
     CameDomoticRequestError,
-    CommandNotFound,
+    CameEntitiesSet,
+    EntityType,
+    EntityType2Class,
+    Feature,
+    FeaturesSet,
 )
+
+
+# region Intro (version, logger)
 
 # Get the package version
 try:
@@ -44,13 +74,13 @@ except PackageNotFoundError:
 
 # Create a logger for the package
 _LOGGER = logging.getLogger(__package__)
-formatter = logging.Formatter(
-    "%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(module)s \
-        - %(funcName)s (line %(lineno)d)"
+_formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s - "
+    "%(module)s:%(lineno)d (%(funcName)s)"
 )
-console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setFormatter(formatter)
-_LOGGER.addHandler(console_handler)
+_console_handler = logging.StreamHandler(sys.stdout)
+_console_handler.setFormatter(_formatter)
+_LOGGER.addHandler(_console_handler)
 _LOGGER.setLevel(logging.DEBUG)
 
 
@@ -61,11 +91,74 @@ def get_logger():
     """
     return _LOGGER
 
+    # endregion
+
+
+def ensure_login(func):
+    """
+    Ensures that the server is authenticated before executing
+    the decorated method.
+    """
+
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        if not self.is_authenticated:
+            try:
+                if not self._login():  # pylint: disable=protected-access
+                    raise CameDomoticAuthError("Login failed.")
+            except CameDomoticAuthError as e:
+                raise e
+            except Exception as e:
+                _LOGGER.error(
+                    "Error trying to login with the server. Error: %s", e
+                )
+                raise CameDomoticAuthError(
+                    "Error trying to login with the server"
+                ) from e
+        return func(self, *args, **kwargs)
+
+    return wrapper
+
 
 class CameETIDomoServer:
     """
-    Class that represents a Came ETI/Domo server.
+    Represents a CAME ETI Domo server.
+
+    This is a context manager, so you can use it in a with statement
+    to properly manage the resources. The server is authenticated
+    only when required, and the session is disposed when the context is exited.
+
+    If you want, you can also manually:
+    - check if the server is authenticated with the is_authenticated property.
+    - keep the CAME session alive with the keep_alive() method.
+    - dispose the resources currently in use with the dispose() method.
+
+    Notice that you can still use the object after disposal, since it
+    can recreate automatically the needed resources when required.
+
+    Args:
+        host (str): The host address of the server.
+        username (str): The username for authentication.
+        password (str): The password for authentication.
+        keep_alive (bool, optional=True): automatically keep the session alive
+
+    Properties:
+        is_authenticated (bool): True if the server is authenticated.
+        keycode (str): The keycode (unique ID) of the CAME ETI/Domo server.
+        software_version (str): The software version of the ETI/Domo server.
+        type (str): The type of CAME ETI/Domo server.
+        board (str): The board type of the CAME ETI/Domo server.
+        serial_number (str): The serial number of the CAME ETI/Domo server.
+
+    Methods:
+        get_features() -> CameEntitiesSet: Lists all the supported features.
+        get_entities() -> CameEntitiesSet: Lists all the managed entities.
+        set_entity_status(entity, status, *, brightness=None): Update an entity
+        keep_alive() -> bool: Sends a keep alive request to the CAME server.
+        dispose() -> None: Dispose the resources in use.
     """
+
+    # region Constants
 
     # Header for every http request made to the server
     _HTTP_HEADERS = {
@@ -75,352 +168,660 @@ class CameETIDomoServer:
 
     _HTTP_TIMEOUT = 10  # seconds
 
-    # Dictionary of available commands
-    _available_commands = {
-        "features": "feature_list_req",
-        "lights": "light_list_req",  # "nested_light_list_req",
-        # TODO Not tested features are below this line
-        "update": "status_update_req",
-        "relays": "relays_list_req",
-        "cameras": "tvcc_cameras_list_req",
-        "timers": "timers_list_req",
-        "thermoregulation": "thermo_list_req",
-        "analogin": "analogin_list_req",
-        "digitalin": "digitalin_list_req",
-        "scenarios": "scenarios_list_req",
-        "openings": "openings_list_req",
-        "energy": None,  # TODO "energy_stat_req",
-        "loadsctrl": None,  # TODO "loadsctrl_meter_list_req", + others
-        "users": "sl_users_list_req",
-        "maps": "map_descr_req",
-    }
+    # endregion
 
-    def __init__(self, host: str):
-        """
-        Instantiate a new :class:`Object` of type :class:`Domo`
-        that communicates with an Eti/Domo server at the specified ip address
+    # region Special methods
 
-        :param host: A string representing the host/IP of the Eti/Domo server
-        :raises :class:`ServerNotFound`: if the :param:`host` is not available
-        """
+    def __init__(self, host, username, password, *, keep_alive: bool = True):
 
-        # Wrap the host ip in a http url
-        self._host = "http://" + host + "/domo/"
-        # The sequence start from 1
-        self._cseq = 0
-        # Session id for the client
-        self.id = ""
+        # Validate the input
+        if not isinstance(host, str) or host == "":
+            raise TypeError("host must be a string")
+        if (
+            username is None
+            or password is None
+            or not isinstance(username, str)
+            or not isinstance(password, str)
+        ):
+            raise TypeError("username and password must be strings")
 
-        # List of items managed by the server
-        self.entities = {}
+        # region private attributes
+
+        # Login attributes
+        self._host = host
+        self._host_url = "http://" + host + "/domo/"
+        self._username = username
+        self._password = password
+        # self._httpclient = aiohttp.ClientSession()
+
+        # Session attributes
+        self._http_session = requests.Session()  # This is thread safe
+        self._session_id = ""
+        self._session_expiration_timestamp = datetime(2000, 1, 1)
+        self._keep_alive_required = (
+            keep_alive  # TODO If True, the server will keep the session alive
+        )
+        self._cseq = 0  # The actual sequence starts from 1
+        # self._cseq_lock = asyncio.Lock()
+
+        # Server attributes
+        self._keycode = ""
+        self._software_version = ""
+        self._type = ""
+        self._board = ""
+        self._serial_number = ""
+
+        # Features and entities
+        self._features = set()  # List of available features
+        self._entities = set()  # List of items managed by the server
+
+        # endregion
+
+        # region Check host availability
+
         try:
-            # Check if the host is available
             response = requests.get(
-                self._host, headers=self._HTTP_HEADERS, timeout=10
+                self._host_url,
+                headers=self._HTTP_HEADERS,
+                timeout=self._HTTP_TIMEOUT,
             )
-        except requests.exceptions.ConnectionError:
-            self._host = ""
-            raise CameDomoticServerNotFoundError
 
-        # If not then raise an exception
-        if not response.status_code == 200:
-            self._host = ""
-            raise CameDomoticServerNotFoundError
+            if response.status_code != 200:
+                _LOGGER.error(
+                    "The server '%s' is not available. Status code: %s",
+                    host,
+                    response.status_code,
+                )
+                raise CameDomoticServerNotFoundError(
+                    f"Server '{host}' not available"
+                )
 
-    def login(self, username: str, password: str) -> bool:
+            _LOGGER.debug(
+                "The server '%s' is available.",
+                self._host,
+            )
+        except requests.exceptions.RequestException as e:
+            _LOGGER.error(
+                "The server '%s' is not available. Error: %s", host, e
+            )
+            raise CameDomoticServerNotFoundError(
+                f"Server '{host}' not available"
+            ) from e
+
+        # endregion
+
+    def __enter__(self):
+        # Return self if you want to use the instance in the context
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # Handle exception, if any
+        if exc_type is not None:
+            _LOGGER.error("An error occurred: %s. Traceback: %s",
+                          exc_val, traceback.format_exc())
+
+        # Dispose the resources
+        self.__del__()
+
+        # Return True if the exception was handled, False to propagate it
+        return False
+
+    def __del__(self):
+        # Dispose the resources
+        self.dispose()
+
+    # endregion
+
+    # region Properties
+
+    @property
+    def is_authenticated(self) -> bool:
+        """True if the server is authenticated, False otherwise."""
+        return (
+            self._session_id != ""
+            and self._session_expiration_timestamp > datetime.now(timezone.utc)
+        )
+
+    @property
+    def keycode(self) -> str:
+        """Keycode (unique ID) of the CAME Eti/Domo server."""
+        if self._keycode == "":
+            self._fetch_features_list()
+
+        return self._keycode
+
+    @property
+    def software_version(self) -> str:
+        """Software version of the CAME Eti/Domo server."""
+        if self._software_version == "":
+            self._fetch_features_list()
+        return self._software_version
+
+    @property
+    def type(self) -> str:
+        """Type of CAME Eti/Domo server."""
+        if self._type == "":
+            self._fetch_features_list()
+        return self._type
+
+    @property
+    def board(self) -> str:
+        """Board type of the CAME Eti/Domo server."""
+        if self._board == "":
+            self._fetch_features_list()
+        return self._board
+
+    @property
+    def serial_number(self) -> str:
+        """Serial number of the CAME Eti/Domo server."""
+        if self._serial_number == "":
+            self._fetch_features_list()
+        return self._serial_number
+
+    # endregion
+
+    # region Public methods
+
+    def get_features(self) -> FeaturesSet:
+        """Returns the list of features supported by the server."""
+        if not self._features:
+            # If features are not cached, fetch them from the API
+            self._fetch_features_list()
+
+        return self._features
+
+    def get_entities(self, entity_type: EntityType = None) -> CameEntitiesSet:
+        """Returns the list of entities managed by the server."""
+
+        if not self._entities or len(self._entities) == 0:
+            # If entities are not cached, fetch them from the API
+            self._fetch_entities_list()
+
+        # Return a subset of entities if entity_type is specified
+        if entity_type is not None:
+            # TODO Add new mappings once new entity classes are implemented
+            if entity_type not in EntityType2Class:
+                raise ValueError(
+                    "Invalid entity type. Supported values are: "
+                    f"{EntityType2Class.keys()}"
+                )
+
+            # requested_type = type(EntityType2Class[entity_type])
+            return CameEntitiesSet(
+                {item for item in self._entities if isinstance(item, EntityType2Class[entity_type])}  # noqa: E501 # pylint: disable=line-too-long
+            )
+        else:
+            return self._entities
+
+    def set_entity_status(self, entity, status, *, brightness=None) -> bool:
         """
-        Method that takes in the username and password and attempt a login
-        to the server. If the login is correct, then the ``id`` parameter
-        of the object :class:`Domo` will be set to the session id
-        given by the server.
+        Sets the status of an entity.
 
-        :param username: username of the user
-        :param password: password of the user
-        :return: ``<None>``
+        Args:
+            entity (Entity): The entity to set the status for.
+            status (EntityStatus): The status to set.
+
+        Keyword Args:
+            brightness (int, optional): The brightness level. Defaults to None.
         """
+        # TODO Implement your API call here to set the status of an entity
+        # TODO add the @ensure_login decorator to the proper (sub)method
+
+    def keep_alive(self) -> bool:
+        """
+        Sends a keep alive request to the CAME server.
+
+        Returns:
+            bool: True if the keep alive was successful, False otherwise.
+        """
+
+        if not self.is_authenticated:
+            _LOGGER.debug("Not authenticated, nothing to do.")
+            return False
+
+        # Input example
+        # {
+        #     "sl_client_id": "my_session_id",
+        #     "sl_cmd": "sl_keep_alive_req"
+        # }
+
+        # Create the keep alive request
+        request_data = {
+            "sl_client_id": self._session_id,
+            "sl_cmd": "sl_keep_alive_req"
+        }
+
+        try:
+            # Send the post request with the login parameters
+            response = self._send_command(request_data)
+
+            # Valid response example:
+            # {
+            #     "sl_cmd":	"sl_keep_alive_ack",
+            #     "sl_data_ack_reason":	0,
+            #     "sl_client_id":	"my_session_id"
+            # }
+
+            # Check if the user is authorized and store the session info
+            if (
+                response["sl_cmd"] == "sl_keep_alive_ack"
+                and response["sl_data_ack_reason"] == 0
+            ):
+                _LOGGER.debug("Keep alive successful.")
+                return True
+            else:
+                _LOGGER.error(
+                    "Keep alive failed. Response: %s", response
+                )
+        except CameDomoticRequestError as e:
+            _LOGGER.error("Error trying to keep alive. Error: %s", e)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            _LOGGER.error(
+                "Unexpected error trying to keep alive. Error: %s", e
+            )
+
+        return False
+
+    def dispose(self) -> None:
+        """
+        Dispose the resources used by the server.
+
+        raise: Nothing, everything is managed internally.
+        """
+        try:
+            if self.is_authenticated:
+                logout_succeded = self._logout()
+                if not logout_succeded:
+                    _LOGGER.warning("Logout failed.")
+            self._http_session.close()
+            _LOGGER.debug("Resources disposed.")
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            _LOGGER.error(
+                "Unexpected error disposing the resources. Error: %s\n%s",
+                e, traceback.format_exc(),
+            )
+
+    # endregion
+
+    # region Protected methods
+
+    def _login(self) -> bool:
+        """
+        Logs in to the server or reuse a valid session.
+
+        Returns:
+            bool: True if the login was successful, False otherwise.
+        """
+
+        if self.is_authenticated:
+            _LOGGER.debug("Already authenticated.")
+            return True
 
         # Create the login request
         request_data = {
             "sl_cmd": "sl_registration_req",
-            "sl_login": username,
-            "sl_pwd": password,
+            "sl_login": self._username,
+            "sl_pwd": self._password,
         }
 
-        # Send the post request with the login parameters
-        response = requests.post(
-            self._host,
-            data={"command": json.dumps(request_data)},
-            headers=self._HTTP_HEADERS,
-            timeout=self._HTTP_TIMEOUT,
-        )
+        try:
+            # Send the post request with the login parameters
+            response = self._send_command(request_data)
 
-        # Set the client id for the session
-        self.id = response.json()["sl_client_id"]
+            # Valid response example:
+            # {
+            #     "sl_cmd":	"sl_registration_ack",
+            #     "sl_client_id":	"my_session_id",
+            #     "sl_keep_alive_timeout_sec":	900,
+            #     "sl_data_ack_reason":	0
+            # }
 
-        # Check if the user is authorized
-        if not response.json()["sl_data_ack_reason"] == 0:
+            # Check if the user is authorized and store the session info
+            if (
+                response["sl_cmd"] == "sl_registration_ack"
+                and response["sl_data_ack_reason"] == 0
+                and len(response["sl_client_id"]) > 0
+                and response["sl_keep_alive_timeout_sec"] > 0
+            ):
+                self._session_id = response["sl_client_id"]
+                # Be conservative and set expiration datetime 30 seconds
+                # before the actual expiration
+                self._session_expiration_timestamp = datetime.now(
+                    timezone.utc
+                ) + timedelta(
+                    seconds=(response["sl_keep_alive_timeout_sec"] - 30)
+                )
+                self._cseq = 0  # Reset the cseq sequence
+
+                _LOGGER.debug(
+                    "The user is authorized. Session expiration timestamp: %s",
+                    self._session_expiration_timestamp,
+                )
+                return True
+            else:
+                _LOGGER.error(
+                    "The user is not authorized. Response: %s", response
+                )
+                return False
+
+        except CameDomoticRequestError as e:
+            _LOGGER.error("Error trying login with the server. Error: %s", e)
+            return False
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            _LOGGER.error(
+                "Unexpected error trying login with the server. Error: %s", e
+            )
             return False
 
-        return True
-
-    def keep_alive(self) -> bool:
+    def _logout(self) -> bool:
         """
-        Method that send a keep alive request to the server
+        Logs out from the server (if actually authenticated).
+
+        Returns:
+            bool: True if the logout was successful, False otherwise.
         """
+        if not self.is_authenticated:
+            _LOGGER.debug("Not authenticated, nothinf to do.")
+            return True
 
-        parameters = (
-            'command={"sl_client_id":"'
-            + self.id
-            + '","sl_cmd":"sl_keep_alive_req"}'
-        )
+        # Create the login request
+        request_data = {
+            "sl_client_id": self._session_id,
+            "sl_cmd": "sl_logout_req"
+        }
 
-        # Send the post request with the login parameters
-        response = requests.post(
-            self._host,
-            params=parameters,
-            headers=self._HTTP_HEADERS,
-            timeout=10,
-        )
+        try:
+            # Send the post request with the login parameters
+            response = self._send_command(request_data)
 
-        return response.json()["sl_data_ack_reason"] == 0
+            # Valid response example:
+            # {
+            #     "sl_cmd": "sl_logout_ack",
+            #     "sl_ack_reason": 0,
+            #     "sl_data_ack_reason": 0
+            # }
 
-    def update_lists(self) -> None:
-        """
-        Function that update the items dictionary containing all the items
-        managed by the eti/domo server
-        """
+            # Check if the user is authorized and store the session info
+            if (
+                response["sl_cmd"] == "sl_logout_ack"
+                and response["sl_ack_reason"] == 0
+                and response["sl_data_ack_reason"] == 0
+            ):
+                # Reset the session
+                self._session_id = ""
+                self._session_expiration_timestamp = datetime.now(
+                    timezone.utc
+                )
 
-        # Get a list of available features for the user
-        features_list = self.list_request(
-            self._available_commands["features"]
-        )["list"]
-        # Populate the items dictionary containing every item of the server
-        for feature in features_list:
-            # Get the json response from the server
-            tmp_list = self.list_request(self._available_commands[feature])
-            # Parse the json into a more readable and useful structure
-            self.entities[feature] = tmp_list
+                _LOGGER.debug("Logged off.")
+                return True
+            else:
+                _LOGGER.error(
+                    "The user is not authorized. Response: %s", response
+                )
+                return False
 
-    def list_request(self, cmd_name) -> dict:
-        """
-        Method that send the server a request and retrieve a list of items
-        identified by the :param:`cmd_name` parameter
+        except CameDomoticRequestError as e:
+            _LOGGER.error("Error trying to logoff. Error: %s", e)
+            return False
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            _LOGGER.error(
+                "Unexpected error trying to logoff. Error: %s", e
+            )
+            return False
 
-        :return: a json dictionary representing the response of the server
-        :raises RequestError: if the request is invalid
-        :raises CommandNotFound: if the command requested does not exists
-        """
+    def _send_command(self, data: dict) -> requests.Response:
+        try:
+            response = self._http_session.post(
+                self._host_url,
+                data={"command": json.dumps(data)},
+                headers=self._HTTP_HEADERS,
+                timeout=self._HTTP_TIMEOUT,
+            )
+            response.raise_for_status()
+            if response.status_code != 200:
+                _LOGGER.debug(
+                    "Request error. HTTP response status code: %s",
+                    response.status_code,
+                )
+                raise CameDomoticRequestError(
+                    f"Request error. HTTP response \
+status code: {response.status_code}"
+                )
 
-        if cmd_name is None:  # TODO remove and fix energy stats case
-            return {}
+            _LOGGER.debug(
+                "POST command sent successfully, response retrieved.",
+            )
 
-        # Check if the command exists
-        if not cmd_name in self._available_commands.values():
-            raise CommandNotFound
+            return response.json()
 
-        # If the user requested the map,
-        # then we don't need to pass the client id
-        client_id = (
-            ""
-            if cmd_name == "map_descr_req"
-            else '"client":"' + self.id + '",'
-        )
+        # In case of a request exception, try to dispose the old session
+        # and to refresh the HTTP session object, then rethrow the exception
+        except requests.RequestException as e:
+            _LOGGER.error(
+                "RequestException caught while sending a POST command "
+                "to the CAME server. Error: %s\n%s",
+                e,
+                traceback.format_exc(),
+            )
+            _LOGGER.info("Trying to refresh the HTTP session.")
+            self._http_session.close()
+            self._http_session = requests.Session()
+            _LOGGER.info("New HTTP session created successfully.")
 
-        # If requesting a list of users, then the parameters are different
-        sl_cmd = (
-            '"sl_cmd":"sl_users_list_req"'
-            if cmd_name == "sl_users_list_req"
-            else '"sl_cmd":"sl_data_req"'
-        )
-        sl_appl_msg = (
-            '"sl_appl_msg":{'
-            "" + client_id + ""
-            '"cmd_name":"' + cmd_name + '",'
-            '"cseq":' + str(self._cseq) + ""
-            "},"
-            '"sl_appl_msg_type":"domo",'
-            if not cmd_name == "sl_users_list_req"
-            else ""
-        )
+            raise CameDomoticRequestError from e
 
-        # Create the requests' parameters
-        param = (
-            "command={"
-            "" + sl_appl_msg + ""
-            '"sl_client_id":"' + self.id + '",'
-            "" + sl_cmd + ""
-            "}"
-        )
+    # def _start_keep_alive(self):
+    #     asyncio.create_task(self._keep_alive())
 
-        # Send the post request
-        response = requests.post(
-            self._host, params=param, headers=self._HTTP_HEADERS, timeout=10
-        )
+    @ensure_login
+    def _fetch_features_list(self) -> None:
 
-        # Get a json dictionary from the response
-        response_json = response.json()
+        # Input data example
+        # {
+        #     "sl_appl_msg": {
+        #         "client": "my_session_id",
+        #         "cmd_name": "feature_list_req",
+        #         "cseq": 1
+        #     },
+        #     "sl_appl_msg_type": "domo",
+        #     "sl_client_id": "my_session_id",
+        #     "sl_cmd": "sl_data_req"
+        # }
 
-        # Increment the cseq counter
+        # Create the login request
         self._cseq += 1
+        request_data = {
+            "sl_appl_msg": {
+                "client": self._session_id,
+                "cmd_name": "feature_list_req",
+                "cseq": self._cseq,
+            },
+            "sl_appl_msg_type": "domo",
+            "sl_client_id": self._session_id,
+            "sl_cmd": "sl_data_req",
+        }
 
-        # Check if the response is valid
-        if not response_json["sl_data_ack_reason"] == 0:
-            raise CameDomoticRequestError
+        try:
+            # Send the post request with the login parameters
+            resp = self._send_command(request_data)
 
-        # Return the json of the response
-        return response_json
+            # Valid response example:
+            # {
+            #     "cmd_name": "feature_list_resp",
+            #     "cseq": 1,
+            #     "keycode": "MYUNIQUEID",
+            #     "swver": "1.2.3",
+            #     "type": "2",
+            #     "board": "8",
+            #     "serial": "hexadecimal_serial",
+            #     "list": [
+            #         "lights",
+            #         "openings",
+            #         "scenarios",
+            #         "digitalin",
+            #         "energy",
+            #     ],
+            #     "recovery_status": 0,
+            #     "sl_data_ack_reason": 0,
+            # }
 
-    def switch(
-        self, act_id: int, status: bool = True, is_light: bool = True
-    ) -> dict:
-        """
-        Method to turn on or off a light switch or a relays
+            # Check if the user is authorized and store the session info
+            if resp["sl_data_ack_reason"] == 0:
+                self._keycode = resp["keycode"]
+                self._software_version = resp["swver"]
+                self._type = resp["type"]
+                self._board = resp["board"]
+                self._serial_number = resp["serial"]
 
-        :param act_id: id of the light/relay to be turned on or off
-        :param status: True if the light/relay is to be turned on, False if off
-        :param is_light: True if actin on a light, False if it is a relay
-        :return: a json dictionary representing the response of the server
-        :raises RequestError: Raise a RequestError if the request is invalid
-        """
+                result_features = FeaturesSet()
+                for item in resp["list"]:
+                    result_features.add(Feature(item))
+                self._features = result_features
 
-        # Check if the user wants the light to be turned on or off
-        status = "1" if status else "0"
+                _LOGGER.debug("Features retrieved: %s", self._features)
+                return True
+            else:
+                _LOGGER.error(
+                    "Features retrieval failed. SL_DATA_ACK_REASON: %s",
+                    resp["sl_data_ack_reason"],
+                )
+                raise CameDomoticBadAckError(f"Features retrieval failed. \
+SL_DATA_ACK_REASON: {resp["sl_data_ack_reason"]}")
+        except CameDomoticBadAckError as e:
+            raise e
+        except CameDomoticRequestError as e:
+            _LOGGER.error(
+                "Unexpected error trying to get the features list. Error: %s",
+                e,
+            )
+            self._cseq -= 1  # Rollback the cseq
+            raise e
+        except Exception as e:
+            _LOGGER.error(
+                "Unexpected error trying to get the features list. Error: %s",
+                e,
+            )
+            self._cseq -= 1  # Rollback the cseq
+            raise CameDomoticRequestError(
+                "Unexpected error trying to get the features list."
+            ) from e
 
-        # Check if the user want to switch a light or activate a relay
-        cmd_name = "light_switch_req" if is_light else "relay_activation_req"
+    def _fetch_entities_list(self) -> None:
+        # Ensure that the features have been retrieved
+        if not self._features:
+            self._fetch_features_list()
 
-        # Create the requests' parameters
-        param = (
-            "command={"
-            '"sl_appl_msg":{'
-            '"act_id":' + str(act_id) + ","
-            '"client":"' + self.id + '",'
-            '"cmd_name":"' + cmd_name + '",'
-            '"cseq":' + str(self._cseq) + ","
-            '"wanted_status":' + status + ""
-            "},"
-            '"sl_appl_msg_type":"domo",'
-            '"sl_client_id":"' + self.id + '",'
-            '"sl_cmd":"sl_data_req"'
-            "}"
-        )
+        # For each feature, fetch the entities
+        entities = CameEntitiesSet()
+        for feature in self._features:
+            entities.update(self._fetch_entities_list_by_feature(feature))
 
-        # Send the post request
-        response = requests.post(
-            self._host, params=param, headers=self._HTTP_HEADERS, timeout=10
-        )
+        self._entities = entities
 
-        # Increment the cseq counter
-        self._cseq += 1
+    @ensure_login
+    def _fetch_entities_list_by_feature(self, feature: Feature) -> CameEntitiesSet:  # noqa: E501
 
-        # Check if the response is valid
-        if not response.json()["sl_data_ack_reason"] == 0:
-            raise CameDomoticRequestError
+        try:
+            entity_type = EntityType[feature.name.upper()]
+        except KeyError:
+            _LOGGER.warning(
+                "Feature '%s' not supported. Skipping.", feature.name
+            )
+            return CameEntitiesSet()
 
-        # After every action performed we update the list of items
-        self.update_lists()
+        if entity_type in {EntityType.LIGHTS, EntityType.OPENINGS}:
+            # Input data example
+            # {
+            #     "sl_appl_msg": {
+            #         "client": "my_session_id",
+            #         "cmd_name": "openings_list_req",
+            #         "cseq": 11
+            #     },
+            #     "sl_appl_msg_type": "domo",
+            #     "sl_client_id": "my_session_id",
+            #     "sl_cmd": "sl_data_req"
+            # }
 
-        # Return the json of the response
-        return response.json()
+            # Create the request
+            self._cseq += 1
+            request_data = {
+                "sl_appl_msg": {
+                    "client": self._session_id,
+                    "cmd_name": entity_type.value,
+                    "cseq": self._cseq,
+                },
+                "sl_appl_msg_type": "domo",
+                "sl_client_id": self._session_id,
+                "sl_cmd": "sl_data_req",
+            }
 
-    def thermo_mode(self, act_id: int, mode: int, temp: float) -> dict:
-        """
-        Method to change the operational mode of a thermo zone
+            try:
+                # Send the post request with the login parameters
+                resp = self._send_command(request_data)
 
-        :param act_id: id of the thermo zone to be configured
-        :param mode: 0 Turned off, 1 Manual mode, 2 Auto mode, 3 Jolly mode
-        :param temp: Temperature to set
-        :return: a json dictionary representing the response of the server
-        :raises RequestError: Raise a RequestError if the request is invalid
-        """
+                # Output example
+                # {
+                # 	"cseq":	1,
+                # 	"cmd_name":	"light_list_resp",
+                # 	"array":	[...], // here are the entities
+                # 	"sl_data_ack_reason":	0
+                # }
 
-        # Check if the mode exists
-        if mode not in [0, 1, 2, 3]:
-            raise CameDomoticRequestError
+                if resp["sl_data_ack_reason"] == 0:
+                    # Create the entities
+                    entities = CameEntitiesSet(
+                        EntityType2Class[entity_type]
+                        .from_json(item) for item in resp["array"]
+                      )
+                    _LOGGER.debug("Entities retrieved: %s", entities)
+                    return entities
+                else:
+                    _LOGGER.error(
+                        "Entity %s retrieval failed. SL_DATA_ACK_REASON: %s",
+                        feature.name,
+                        resp["sl_data_ack_reason"],
+                    )
+                    raise CameDomoticBadAckError(f"Entity {feature.name} "
+                                    "retrieval failed. SL_DATA_ACK_REASON: " # noqa E128
+                                    f"{resp["sl_data_ack_reason"]}") # noqa E128
+            except CameDomoticBadAckError as e:
+                _LOGGER.error("%s\n%s", e, traceback.format_exc())
+                # raise e
+            except CameDomoticRequestError as e:
+                _LOGGER.error(
+                    "Unexpected CameDomoticRequestError trying to get "
+                    "the entities for the feature %s. Error: %s\n%s",
+                    feature.name,
+                    e,
+                    traceback.format_exc(),
+                )
+                # raise e
+            except KeyError as e:
+                _LOGGER.error(
+                    "Unexpected KeyError trying to get the entities for "
+                    "the feature %s. Error: %s\n%s",
+                    feature.name,
+                    e,
+                    traceback.format_exc(),
+                )
+#                 raise CameDomoticRequestError("Unexpected KeyError trying to\
+# get the entities for the feature {feature.name}") from e
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                _LOGGER.error(
+                    "Unexpected error trying to get the entities for "
+                    "the feature %s. Error: %s\n%s",
+                    feature.name,
+                    e,
+                    traceback.format_exc(),
+                )
+#                 raise CameDomoticRequestError("Unexpected error trying to \
+# get the entities for the feature {feature.name}") from e
 
-        # Transform temperature from float to int,we need to pass the server
-        # an integer value, which is in Celsius, but multiplied by 10
-        # we also round the float value to only 1 digits
-        value = int(round(temp * 10, 1))
+        return CameEntitiesSet()
 
-        # Create the requests' parameters
-        param = (
-            "command={"
-            '"sl_appl_msg":{'
-            '"act_id":' + str(act_id) + ","
-            '"client":"' + self.id + '",'
-            '"cmd_name":"thermo_zone_config_req",'
-            '"cseq":' + str(self._cseq) + ","
-            '"extended_infos": 0,'
-            '"mode":' + str(mode) + ","
-            '"set_point":' + str(value) + ""
-            "},"
-            '"sl_appl_msg_type":"domo",'
-            '"sl_client_id":"' + self.id + '",'
-            '"sl_cmd":"sl_data_req"'
-            "}"
-        )
+    # endregion
 
-        # Send the post request
-        response = requests.post(
-            self._host, params=param, headers=self._HTTP_HEADERS, timeout=10
-        )
+    # region Static methods
 
-        # Increment the cseq counter
-        self._cseq += 1
-
-        # Check if the response is valid
-        if not response.json()["sl_data_ack_reason"] == 0:
-            raise CameDomoticRequestError
-
-        # After every action performed we update the list of items
-        self.update_lists()
-
-        # Return the json of the response
-        return response.json()
-
-    def change_season(self, season: str) -> dict:
-        """
-        Method that change the season of the entire thermo implant
-
-        :param season: string defining the season
-        :return: a json dictionary representing the response of the server
-        :raises RequestError: Raise a RequestError if the request is invalid
-        """
-
-        # Check if the season exists
-        if season not in ["plant_off", "summer", "winter"]:
-            raise CameDomoticRequestError
-
-        # Create the requests' parameters
-        param = (
-            "command={"
-            '"sl_appl_msg":{'
-            '"client":"' + self.id + '",'
-            '"cmd_name":"thermo_season_req",'
-            '"cseq":' + str(self._cseq) + ","
-            '"season":"' + season + '"'
-            "},"
-            '"sl_appl_msg_type":"domo",'
-            '"sl_client_id":"' + self.id + '",'
-            '"sl_cmd":"sl_data_req"'
-            "}"
-        )
-
-        # Send the post request
-        response = requests.post(
-            self._host, params=param, headers=self._HTTP_HEADERS, timeout=10
-        )
-
-        # Increment the cseq counter
-        self._cseq += 1
-
-        # Check if the response is valid
-        if not response.json()["sl_data_ack_reason"] == 0:
-            raise CameDomoticRequestError
-
-        # After every action performed we update the list of items
-        self.update_lists()
-
-        # Return the json of the response
-        return response.json()
+    # endregion
