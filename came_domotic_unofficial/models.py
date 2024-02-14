@@ -16,6 +16,7 @@
 CAME Domotic entities.
 """
 
+from datetime import datetime
 from enum import Enum
 
 # from came_domotic_unofficial import _LOGGER
@@ -96,13 +97,14 @@ class EntityType(CameEnum):
     # LIGHTS = "nested_light_list_req"
     OPENINGS = "openings_list_req"
     # OPENINGS = "nested_openings_list_req"
+    DIGITALIN = "digitalin_list_req"
+    SCENARIOS = "scenarios_list_req"
     # UPDATE = "status_update_req"
     # RELAYS = "relays_list_req"
     # CAMERAS = "tvcc_cameras_list_req"
     # TIMERS = "timers_list_req"
     # THERMOREGULATION = "thermo_list_req"
     # ANALOGIN = "analogin_list_req"
-    # DIGITALIN = "digitalin_list_req"
     # USERS = "sl_users_list_req"
     # MAPS = "map_descr_req"
 
@@ -127,6 +129,7 @@ class EntityStatus(CameEnum):
 
     ON_OPEN = 1
     OFF_CLOSED = 0
+    NOT_APPLICABLE = -99
 
 
 class LightType(CameEnum):
@@ -140,6 +143,29 @@ class OpeningType(CameEnum):
     """Enum listing the opening types."""
 
     OPEN_CLOSE = 0
+
+
+class DigitalInType(CameEnum):
+    """Enum listing the digital input types."""
+
+    BUTTON = 1
+
+
+class ScenarioIcon(CameEnum):
+    """Enum listing the scenario icons."""
+
+    LIGHTS = 14
+    OPENINGS_OPEN = 22
+    OPENINGS_CLOSE = 23
+    UNKNOWN = -1
+
+
+class ScenarioStatus(CameEnum):
+    """Enum listing the scenario status."""
+
+    NOT_APPLIED = 0
+    ONGOING = 1
+    APPLIED = 2
 
 
 class SeasonSetting(Enum):
@@ -427,11 +453,12 @@ class Light(CameEntity):
             status=(
                 EntityStatus(json_data["status"])
                 if "status" in json_data
+                and json_data["status"] in EntityStatus
                 else Light._DEFAULT_STATUS
             ),
             light_type=(
                 LightType(json_data["type"])
-                if "type" in json_data
+                if "type" in json_data and json_data["type"] in LightType
                 else Light._DEFAULT_LIGHT_TYPE
             ),
             brightness=(
@@ -563,15 +590,321 @@ class Opening(CameEntity):
             status=(
                 EntityStatus(json_data["status"])
                 if "status" in json_data
+                and json_data["status"] in EntityStatus
                 else Opening._DEFAULT_STATUS
             ),
             opening_type=(
                 OpeningType(json_data["type"])
-                if "type" in json_data
+                if "type" in json_data and json_data["type"] in OpeningType
                 else Opening._DEFAULT_OPENING_TYPE
             ),
             partial_openings=(
                 json_data["partial"] if "partial" in json_data else []
+            ),
+        )
+
+
+class DigitalIn(CameEntity):
+    """
+    Represents a CAME digital input (button).
+    """
+
+    _DEFAULT_BUTTON_TYPE = DigitalInType.BUTTON
+    _DEFAULT_ADDRESS = 0
+    _DEFAULT_ACK_CODE = 1
+    _DEFAULT_RADIO_NODE_ID = "00000000"
+    _DEFAULT_RF_RADIO_LINK_QUALITY = 0
+    _DEFAULT_UTC_TIME = 0
+
+    def __init__(
+        self,
+        entity_id: int,
+        name: str = None,
+        *,
+        button_type: DigitalInType = _DEFAULT_BUTTON_TYPE,
+        address: int = _DEFAULT_ADDRESS,
+        ack_code: int = _DEFAULT_ACK_CODE,
+        radio_node_id: str = _DEFAULT_RADIO_NODE_ID,
+        rf_radio_link_quality: int = _DEFAULT_RF_RADIO_LINK_QUALITY,
+        utc_time: int = _DEFAULT_UTC_TIME,
+    ):
+        """
+        Constructor for the Came DigitalIn class.
+
+        :param entity_id: the digital input ID
+        :param name: the digital input name
+        :param button_type: the digital input type (default: BUTTON)
+        :param address: the digital input address (default: 0)
+        :param ack_code: the digital input ack code (default: 1)
+        :param radio_node_id: radio node ID (default: "00000000")
+        :param rf_radio_link_quality: radio link quality (default: 0)
+        :param utc_time: the digital input UTC time offset (default: 0)
+        """
+
+        self._button_type = button_type
+        self._address = address
+        self._ack_code = ack_code
+        self._radio_node_id = radio_node_id
+        self._rf_radio_link_quality = rf_radio_link_quality
+        self._utc_time = utc_time
+
+        super().__init__(
+            entity_id,
+            name,
+            status=EntityStatus.NOT_APPLICABLE,
+        )
+
+    # Properties
+    @property
+    def button_type(self) -> DigitalInType:
+        """
+        Returns the digital input type.
+        """
+        return self._button_type
+
+    @property
+    def address(self) -> int:
+        """
+        Returns the digital input address.
+        """
+        return self._address
+
+    @property
+    def ack_code(self) -> int:
+        """
+        Returns the digital input ack code.
+        """
+        return self._ack_code
+
+    @property
+    def radio_node_id(self) -> str:
+        """
+        Returns the digital input radio node ID.
+        """
+        return self._radio_node_id
+
+    @property
+    def rf_radio_link_quality(self) -> int:
+        """
+        Returns the digital input radio link quality.
+        """
+        return self._rf_radio_link_quality
+
+    @property
+    def last_pressed(self) -> datetime:
+        """
+        Returns the digital input UTC time offset.
+        """
+        return datetime.fromtimestamp(self._utc_time)
+
+    def __str__(self) -> str:
+        return (
+            f"{self.type.__name__} #{self.id}: {self.name} - "
+            f"Type: {self.button_type.name} - Address: {self.address} - "
+            f"Ack code: {self.ack_code} - Radio node ID: {self.radio_node_id} - "
+            f"Radio link quality: {self.rf_radio_link_quality} - "
+            f"UTC time: {self.last_pressed}"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f'{self.type.__name__}({self.id},"{self.name}",'
+            f"button_type={self.button_type},address={self.address},"
+            f"ack_code={self.ack_code},radio_node_id={self.radio_node_id},"
+            f"rf_radio_link_quality={self.rf_radio_link_quality},"
+            f"utc_time={self._utc_time})"
+        )
+
+    @staticmethod
+    def from_json(json_data: dict):
+        """
+        Updates the digital input properties from a JSON dictionary.
+
+        :param json_data: the JSON dictionary representing the digital input
+        """
+
+        # Example of JSON representation
+        # {
+        #     "name":	"My button",
+        #     "act_id":	11,
+        #     "type":	1,
+        #     "addr":	0,
+        #     "ack":	1,
+        #     "radio_node_id":	"00000000",
+        #     "rf_radio_link_quality":	0,
+        #     "utc_time":	0
+        # }
+
+        return DigitalIn(
+            entity_id=json_data["act_id"],
+            name=(
+                json_data["name"]
+                if "name" in json_data
+                else CameEntity._DEFAULT_NAME
+            ),
+            button_type=(
+                DigitalInType(json_data["type"])
+                if "type" in json_data and json_data["type"] in DigitalInType
+                else DigitalIn._DEFAULT_BUTTON_TYPE
+            ),
+            address=(
+                json_data["addr"]
+                if "addr" in json_data
+                else DigitalIn._DEFAULT_ADDRESS
+            ),
+            ack_code=(
+                json_data["ack"]
+                if "ack" in json_data
+                else DigitalIn._DEFAULT_ACK_CODE
+            ),
+            radio_node_id=(
+                json_data["radio_node_id"]
+                if "radio_node_id" in json_data
+                else DigitalIn._DEFAULT_RADIO_NODE_ID
+            ),
+            rf_radio_link_quality=(
+                json_data["rf_radio_link_quality"]
+                if "rf_radio_link_quality" in json_data
+                else DigitalIn._DEFAULT_RF_RADIO_LINK_QUALITY
+            ),
+            utc_time=(
+                json_data["utc_time"]
+                if "utc_time" in json_data
+                else DigitalIn._DEFAULT_UTC_TIME
+            ),
+        )
+
+
+class Scenario(CameEntity):
+    """
+    Represents a CAME scenario.
+    """
+
+    _DEFAULT_STATUS = EntityStatus.OFF_CLOSED
+    _DEFAULT_SCENARIO_STATUS = ScenarioStatus.NOT_APPLIED
+    _DEFAULT_ICON_ID = ScenarioIcon.UNKNOWN
+
+    def __init__(
+        self,
+        entity_id: int,
+        name: str = None,
+        *,
+        status: EntityStatus = EntityStatus.OFF_CLOSED,
+        scenario_status: ScenarioStatus = ScenarioStatus.NOT_APPLIED,
+        icon: ScenarioIcon = ScenarioIcon.UNKNOWN,
+        is_user_defined: bool = False,
+    ):
+        """
+        Constructor for the Came Scenario class.
+
+        :param entity_id: the scenario ID
+        :param name: the scenario name
+        :param status: the scenario status (default: OFF, ON when ongoing)
+        :param scenario_status: the scenario status (default: NOT_APPLIED)
+        :param icon: the scenario icon type (default: UNKNOWN)
+        :param is_user_defined: the scenario is user defined (default: false)
+        """
+
+        self._scenario_status = scenario_status
+        self._icon = icon
+        self._is_user_defined = is_user_defined
+
+        super().__init__(
+            entity_id,
+            name,
+            status=status,
+        )
+
+    # Properties
+    @property
+    def scenario_status(self) -> ScenarioStatus:
+        """
+        Returns the scenario status.
+        """
+        return self._scenario_status
+
+    @scenario_status.setter
+    def scenario_status(self, value: ScenarioStatus):
+        """
+        Sets the scenario status.
+        """
+        self._scenario_status = value
+
+    @property
+    def icon(self) -> ScenarioIcon:
+        """
+        Returns the scenario icon.
+        """
+        return self._icon
+
+    @property
+    def is_user_defined(self) -> bool:
+        """
+        Returns whether the scenario is user defined.
+        """
+        return self._is_user_defined
+
+    def __str__(self) -> str:
+        return (
+            f"{self.type.__name__} #{self.id}: {self.name} - "
+            f"Status: {self.status.name} - Scenario status: {self.scenario_status.name} - "
+            f"Icon: {self.icon.name} - User defined: {self.is_user_defined}"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f'{self.type.__name__}({self.id},"{self.name}",'
+            f"status={self.status},scenario_status={self.scenario_status},"
+            f"icon={self.icon},is_user_defined={self.is_user_defined})"
+        )
+
+    @staticmethod
+    def from_json(json_data: dict):
+        """
+        Updates the scenario properties from a JSON dictionary.
+
+        :param json_data: the JSON dictionary representing the scenario
+        """
+
+        # Example of CAME scenario entity:
+        # {
+        # 	"name":	"Close all openings",
+        # 	"id":	6,
+        # 	"status":	0,
+        # 	"scenario_status":	0,
+        # 	"icon_id":	23,
+        # 	"user-defined":	0
+        # }
+
+        return Scenario(
+            entity_id=json_data["id"],
+            name=(
+                json_data["name"]
+                if "name" in json_data
+                else CameEntity._DEFAULT_NAME
+            ),
+            status=(
+                EntityStatus(json_data["status"])
+                if "status" in json_data
+                and json_data["status"] in EntityStatus
+                else Scenario._DEFAULT_STATUS
+            ),
+            scenario_status=(
+                ScenarioStatus(json_data["scenario_status"])
+                if "scenario_status" in json_data
+                and json_data["scenario_status"] in ScenarioStatus
+                else Scenario._DEFAULT_SCENARIO_STATUS
+            ),
+            icon=(
+                ScenarioIcon(json_data["icon_id"])
+                if "icon_id" in json_data
+                and json_data["icon_id"] in ScenarioIcon
+                else Scenario._DEFAULT_ICON_ID
+            ),
+            is_user_defined=(
+                bool(json_data["user-defined"])
+                if "user-defined" in json_data
+                else False
             ),
         )
 
@@ -584,13 +917,14 @@ EntityType2Class = {
     EntityType.FEATURES: Feature,
     EntityType.LIGHTS: Light,
     EntityType.OPENINGS: Opening,
+    EntityType.DIGITALIN: DigitalIn,
+    EntityType.SCENARIOS: Scenario,
     # EntityType.UPDATE:
     # EntityType.RELAYS:
     # EntityType.CAMERAS:
     # EntityType.TIMERS:
     # EntityType.THERMOREGULATION:
     # EntityType.ANALOGIN:
-    # EntityType.DIGITALIN:
     # EntityType.USERS:
     # EntityType.MAPS:
 }

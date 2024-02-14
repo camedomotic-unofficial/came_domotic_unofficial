@@ -730,7 +730,12 @@ SL_DATA_ACK_REASON: {resp["sl_data_ack_reason"]}")
             )
             return CameEntitiesSet()
 
-        if entity_type in {EntityType.LIGHTS, EntityType.OPENINGS}:
+        if entity_type in {
+                EntityType.LIGHTS,
+                EntityType.OPENINGS,
+                EntityType.DIGITALIN,
+                EntityType.SCENARIOS,
+            }:
             # Input data example
             # {
             #     "sl_appl_msg": {
@@ -778,7 +783,7 @@ SL_DATA_ACK_REASON: {resp["sl_data_ack_reason"]}")
                     return entities
                 else:
                     _LOGGER.error(
-                        "Entity %s retrieval failed. SL_DATA_ACK_REASON: %s",
+                        "Entity '%s' retrieval failed. SL_DATA_ACK_REASON: %s",
                         feature.name,
                         resp["sl_data_ack_reason"],
                     )
@@ -791,7 +796,7 @@ SL_DATA_ACK_REASON: {resp["sl_data_ack_reason"]}")
             except CameDomoticRequestError as e:
                 _LOGGER.error(
                     "Unexpected CameDomoticRequestError trying to get "
-                    "the entities for the feature %s. Error: %s\n%s",
+                    "the entities for the feature '%s'. Error: %s\n%s",
                     feature.name,
                     e,
                     traceback.format_exc(),
@@ -800,7 +805,7 @@ SL_DATA_ACK_REASON: {resp["sl_data_ack_reason"]}")
             except KeyError as e:
                 _LOGGER.error(
                     "Unexpected KeyError trying to get the entities for "
-                    "the feature %s. Error: %s\n%s",
+                    "the feature '%s'. Error: %s\n%s",
                     feature.name,
                     e,
                     traceback.format_exc(),

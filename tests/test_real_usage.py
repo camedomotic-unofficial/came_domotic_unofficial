@@ -47,7 +47,7 @@ def test_check_standard_usage():
         assert domo.keep_alive() is False
 
         assert len(domo.keycode) > 0
-        print(domo.keycode)
+        # print(domo.keycode)
 
         assert domo.is_authenticated is True
         assert domo.keep_alive() is True
@@ -58,15 +58,23 @@ def test_check_standard_usage():
 
         entites = domo.get_entities()
         assert len(entites) > 0
-        print(entites)
 
         entities = domo.get_entities(EntityType.LIGHTS)
         assert len(entities) == 29
-        print(entities)
+        # print(entities)
 
         entities = domo.get_entities(EntityType.OPENINGS)
         assert len(entities) == 9
-        print(entities)
+        # print(entities)
+
+        entities = domo.get_entities(EntityType.DIGITALIN)
+        assert len(entities) == 71
+        # print(len(entities))
+        # print(entities)
+
+        entities = domo.get_entities(EntityType.SCENARIOS)
+        assert len(entities) == 8
+        # print(len(entities))
 
         # domo.set_entity_status(my_light, EntityStatus.ON_OPEN, brightness=80)
         # print(my_light.status)
