@@ -176,5 +176,4 @@ cython_debug/
 # My additional list
 # My additional list
 .vscode/
-.bak
-.bak
+*.bak
