@@ -174,5 +174,7 @@ cython_debug/
 #.idea/
 
 # My additional list
+# My additional list
 .vscode/
+.bak
 .bak
