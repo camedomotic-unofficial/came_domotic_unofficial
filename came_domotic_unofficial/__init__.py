@@ -55,10 +55,16 @@ from came_domotic_unofficial.models import (
     CameDomoticAuthError,
     CameDomoticRequestError,
     CameEntitiesSet,
+    CameEntity,
+    Class2SwitchCommand,
+    EntityStatus,
     EntityType,
     EntityType2Class,
     Feature,
     FeaturesSet,
+    Light,
+    Opening,
+    Scenario,
 )
 
 
@@ -298,7 +304,7 @@ class CameETIDomoServer:
         return self._software_version
 
     @property
-    def type(self) -> str:
+    def server_type(self) -> str:
         """Type of CAME Eti/Domo server."""
         if self._type == "":
             self._fetch_features_list()
@@ -353,19 +359,145 @@ class CameETIDomoServer:
         else:
             return self._entities
 
-    def set_entity_status(self, entity, status, *, brightness=None) -> bool:
+    @ensure_login
+    def set_entity_status(
+            self,
+            entity_type: type,
+            entity_id: int,
+            status: EntityStatus = None,
+            *,
+            brightness=None
+            ) -> bool:
         """
-        Sets the status of an entity.
+        Sets the status of an entity. Currently supported: ligts, openings and
+        scenarios.
 
         Args:
+            entity_type (type): The type of the entity.
             entity (Entity): The entity to set the status for.
             status (EntityStatus): The status to set.
 
         Keyword Args:
             brightness (int, optional): The brightness level. Defaults to None.
         """
-        # TODO Implement your API call here to set the status of an entity
-        # TODO add the @ensure_login decorator to the proper (sub)method
+        # Validate input
+        if not isinstance(entity_type, type(CameEntity)):
+            raise TypeError("entity_type must be the type of a CameEntity")
+
+        if not isinstance(entity_id, int) or entity_id < 0:
+            raise ValueError("entity_id must be a positive integer")
+
+        if entity_type is Light or entity_type is Opening:
+            if status is None or not isinstance(status, EntityStatus):
+                raise TypeError("status must be an EntityStatus")
+            if (brightness is not None and not isinstance(brightness, int)
+                    and 0 <= brightness <= 100):
+                raise TypeError("brightness must be between 0 and 100")
+
+        if entity_type not in {Light, Opening, Scenario}:
+            _LOGGER.warning(
+                "Entity type '%s' not supported. Skipping.", entity_type
+            )
+            return False
+
+        # LIGHT - Input payload example
+        # {
+        #     "sl_appl_msg": {
+        #         "act_id": 14,
+        #         "client": "my_session_id",
+        #         "cmd_name": "light_switch_req",
+        #         "cseq": 11,
+        #         "perc": 46,
+        #         "wanted_status": 0
+        #     },
+        #     "sl_appl_msg_type": "domo",
+        #     "sl_client_id": "my_session_id",
+        #     "sl_cmd": "sl_data_req"
+        # }
+
+        # OPENING - Input payload example
+        # {
+        #         "act_id": 51,
+        #         "client": "my_session_id",
+        #         "cmd_name": "opening_move_req",
+        #         "cseq": 16,
+        #         "wanted_status": 1
+        #     },
+        #     "sl_appl_msg_type": "domo",
+        #     "sl_client_id": "my_session_id",
+        #     "sl_cmd": "sl_data_req"
+        # }
+
+        # SCENARIO - Input payload example
+        # {
+        #     "sl_appl_msg": {
+        #         "client": "my_session_id",
+        #         "cmd_name": "scenario_activation_req",
+        #         "cseq": 18,
+        #         "id": 7
+        #     },
+        #     "sl_appl_msg_type": "domo",
+        #     "sl_client_id": "my_session_id",
+        #     "sl_cmd": "sl_data_req"
+        # }
+
+        # Create the request
+        self._cseq += 1
+        request_data = {
+            "sl_appl_msg": {
+                "client": self._session_id,
+                "cmd_name": Class2SwitchCommand[entity_type],
+                "cseq": self._cseq,
+            },
+            "sl_appl_msg_type": "domo",
+            "sl_client_id": self._session_id,
+            "sl_cmd": "sl_data_req",
+        }
+
+        if entity_type in {Light, Opening}:
+            request_data["sl_appl_msg"]["act_id"] = entity_id
+            request_data["sl_appl_msg"]["wanted_status"] = status.value
+            if brightness is not None:
+                request_data["sl_appl_msg"]["perc"] = brightness
+        elif entity_type == Scenario:
+            request_data["sl_appl_msg"]["id"] = entity_id
+
+        try:
+            # Send the post request with the login parameters
+            resp = self._send_command(request_data)
+
+            # Output example
+            # {
+            #     "cseq": 13,
+            #     "cmd_name": "light_switch_resp",
+            #     "sl_data_ack_reason": 0
+            # }
+
+            if resp["sl_data_ack_reason"] == 0:
+                _LOGGER.debug("Entity status updated successfully.")
+                return True
+            else:
+                _LOGGER.error(
+                    "Entity status update failed. SL_DATA_ACK_REASON: %s",
+                    resp["sl_data_ack_reason"],
+                )
+                return False
+        except CameDomoticRequestError as e:
+            _LOGGER.error(
+                "Unexpected error trying to update the status of the entity. Error: %s\n%s",  # noqa: E501 # pylint: disable=line-too-long
+                e,
+                traceback.format_exc(),
+            )
+            self._cseq -= 1
+            return False
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            _LOGGER.error(
+                "Unexpected error trying to update the status of the entity. Error: %s\n%s",  # noqa: E501 # pylint: disable=line-too-long
+                e,
+                traceback.format_exc(),
+            )
+            self._cseq -= 1
+            return False
 
     def keep_alive(self) -> bool:
         """
@@ -735,7 +867,7 @@ SL_DATA_ACK_REASON: {resp["sl_data_ack_reason"]}")
                 EntityType.OPENINGS,
                 EntityType.DIGITALIN,
                 EntityType.SCENARIOS,
-            }:
+                }:
             # Input data example
             # {
             #     "sl_appl_msg": {

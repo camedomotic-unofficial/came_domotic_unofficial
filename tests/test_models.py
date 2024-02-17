@@ -50,7 +50,7 @@ def test_came_entity_initialization(
     assert entity.id == input_id
     assert entity.name == input_name
     assert entity.status == input_status
-    assert entity.type == CameEntity
+    assert type(entity) == CameEntity
 
     # Test changing status
     entity.status = input_status_new
@@ -74,7 +74,7 @@ def test_came_entity_initialization_no_status(
     assert entity.id == input_id
     assert entity.name == input_name
     assert entity.status is None
-    assert entity.type == CameEntity
+    assert type(entity) == CameEntity
 
     # Test changing status
     entity.status = input_status
@@ -94,7 +94,7 @@ def test_came_entity_initialization_no_name(input_status):
     assert entity.id == 1
     assert entity.name == "Unknown"
     assert entity.status is input_status
-    assert entity.type == CameEntity
+    assert type(entity) == CameEntity
 
 
 def test_came_entity_initialization_no_name_nor_status():
@@ -107,11 +107,11 @@ def test_came_entity_initialization_no_name_nor_status():
     assert entity.id == 1
     assert entity.name == "Unknown"
     assert entity.status is None
-    assert entity.type == CameEntity
+    assert type(entity) == CameEntity
 
     # Test assigning status
-    entity.status = EntityStatus.OFF_CLOSED
-    assert entity.status == EntityStatus.OFF_CLOSED
+    entity.status = EntityStatus.OFF_STOPPED
+    assert entity.status == EntityStatus.OFF_STOPPED
 
 
 @given(
@@ -203,7 +203,7 @@ def test_feature_initialization(input_name):
 
     assert feature.id == hash(input_name)
     assert feature.name == input_name
-    assert feature.type == Feature
+    assert type(feature) == Feature
 
 
 # endregion
@@ -237,7 +237,7 @@ def test_light_initialization(
     assert light.status == input_status
     assert light.light_type == LightType.DIMMABLE
     assert light.brightness == input_brightness
-    assert light.type == Light
+    assert type(light) == Light
 
     # Test properties
     light.brightness = input_brightness_new
@@ -307,7 +307,7 @@ def test_light_from_json_missing_optional_keys():
 
     assert light.id == 5
     assert light.name == "Unknown"
-    assert light.status == EntityStatus.OFF_CLOSED
+    assert light.status == EntityStatus.OFF_STOPPED
     assert light.light_type == LightType.ON_OFF
 
 
@@ -366,7 +366,7 @@ def test_opening_initialization(entity_id, name, status, cover_type):
     assert opening.status == status
     assert opening.opening_type == cover_type
     assert not opening.partial_openings  # an empty list is falsey
-    assert opening.type == Opening
+    assert type(opening) == Opening
 
 
 @given(
@@ -425,7 +425,7 @@ def test_opening_from_json_valid(open_act_id, name, status, cover_type):
     assert opening.status == status
     assert opening.opening_type == cover_type
     assert not opening.partial_openings  # an empty list is falsey
-    assert opening.type == Opening
+    assert type(opening) == Opening
 
 
 @given(
@@ -448,7 +448,7 @@ def test_opening_from_json_missing_optional_key(open_act_id):
     assert opening.status == EntityStatus.ON_OPEN
     assert opening.opening_type == OpeningType.OPEN_CLOSE
     assert not opening.partial_openings  # an empty list is falsey
-    assert opening.type == Opening
+    assert type(opening) == Opening
 
 
 def test_opening_from_json_missing_required_keys():

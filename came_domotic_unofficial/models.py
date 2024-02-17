@@ -127,8 +127,9 @@ class EntityType(CameEnum):
 class EntityStatus(CameEnum):
     """Enum listing all the status of the CAME entities."""
 
+    OFF_STOPPED = 0
     ON_OPEN = 1
-    OFF_CLOSED = 0
+    CLOSED = 2
     NOT_APPLICABLE = -99
 
 
@@ -196,6 +197,7 @@ class CameEntity:
     """
 
     _DEFAULT_NAME = "Unknown"
+    _DEFAULT_STATUS = EntityStatus.NOT_APPLICABLE
 
     def __init__(
         self,
@@ -214,7 +216,7 @@ class CameEntity:
 
         self._id = entity_id
         self._name = self._DEFAULT_NAME if name is None or name == "" else name
-        self._status = status
+        self._status = status if status else self._DEFAULT_STATUS
 
     @property
     def id(self) -> int:
@@ -229,13 +231,6 @@ class CameEntity:
         Returns the entity name.
         """
         return self._name
-
-    @property
-    def type(self) -> type:
-        """
-        Returns the entity type.
-        """
-        return type(self)
 
     @property
     def status(self) -> EntityStatus:
@@ -253,16 +248,16 @@ class CameEntity:
 
     def __str__(self) -> str:
         return (
-            f"{self.type.__name__} #{self.id}: {self.name} - Status: "
+            f"{type(self).__name__} #{self.id}: {self.name} - Status: "
             f"{self.status.name if self.status else 'None'}"
         )
 
     def __repr__(self) -> str:
         return (
-            f'{self.type.__name__}({self.id},"{self.name}",'
+            f'{type(self).__name__}({self.id},"{self.name}",'
             f"status={self.status})"
             if self.status
-            else f'{self.type.__name__}({self.id},"{self.name}")'
+            else f'{type(self).__name__}({self.id},"{self.name}")'
         )
 
 
@@ -304,14 +299,14 @@ class Feature(CameEntity):
         return self._name
 
     def __str__(self) -> str:
-        return f"{self.type.__name__}: {self.name}"
+        return f"{type(self).__name__}: {self.name}"
 
     def __repr__(self) -> str:
-        return f'{self.type.__name__}("{self.name}")'
+        return f'{type(self).__name__}("{self.name}")'
 
     # Override the equality operator: features with the same name are the same
     def __eq__(self, other):
-        return self.type == other.type and self.name == other.name
+        return type(self) is type(other) and self.name == other.name
 
     # Override the inequality operator
     def __ne__(self, other):
@@ -319,7 +314,7 @@ class Feature(CameEntity):
 
     # Override the hash function
     def __hash__(self):
-        return hash((self.type, self.name))
+        return hash((type(self), self.name))
 
 
 class FeaturesSet(set):
@@ -341,7 +336,7 @@ class Light(CameEntity):
     Represents a CAME light.
     """
 
-    _DEFAULT_STATUS = EntityStatus.OFF_CLOSED
+    _DEFAULT_STATUS = EntityStatus.OFF_STOPPED
     _DEFAULT_LIGHT_TYPE = LightType.ON_OFF
     _DEFAULT_BRIGHTNESS = 100
 
@@ -408,7 +403,7 @@ class Light(CameEntity):
 
     def __str__(self) -> str:
         result = (
-            f"{self.type.__name__} #{self.id}: {self.name} - "
+            f"{type(self).__name__} #{self.id}: {self.name} - "
             f"Type: ({self.light_type.name}) - Status: {self.status.name}"
         )
 
@@ -419,7 +414,7 @@ class Light(CameEntity):
 
     def __repr__(self) -> str:
         return (
-            f'{self.type.__name__}({self.id},"{self.name}",'
+            f'{type(self).__name__}({self.id},"{self.name}",'
             f"status={self.status},light_type={self.light_type},"
             f"brightness={self.brightness})"
         )
@@ -474,7 +469,7 @@ class Opening(CameEntity):
     Represents a CAME opening.
     """
 
-    _DEFAULT_STATUS = EntityStatus.OFF_CLOSED
+    _DEFAULT_STATUS = EntityStatus.OFF_STOPPED
     _DEFAULT_OPENING_TYPE = OpeningType.OPEN_CLOSE
 
     def __init__(
@@ -542,14 +537,14 @@ class Opening(CameEntity):
 
     def __str__(self) -> str:
         return (
-            f"{self.type.__name__} #{self.id}/{self.close_entity_id}: "
+            f"{type(self).__name__} #{self.id}/{self.close_entity_id}: "
             f"{self.name} - Type: {self.opening_type} - "
             f"Status: {self.status.name} - Partials: {self.partial_openings}"
         )
 
     def __repr__(self) -> str:
         return (
-            f"{self.type.__name__}({self.id},{self.close_entity_id},"
+            f"{type(self).__name__}({self.id},{self.close_entity_id},"
             f'"{self.name}",status={self.status},'
             f"opening_type={self.opening_type},"
             f"partial_openings={self.partial_openings})"
@@ -651,7 +646,6 @@ class DigitalIn(CameEntity):
         super().__init__(
             entity_id,
             name,
-            status=EntityStatus.NOT_APPLICABLE,
         )
 
     # Properties
@@ -699,16 +693,16 @@ class DigitalIn(CameEntity):
 
     def __str__(self) -> str:
         return (
-            f"{self.type.__name__} #{self.id}: {self.name} - "
+            f"{type(self).__name__} #{self.id}: {self.name} - "
             f"Type: {self.button_type.name} - Address: {self.address} - "
-            f"Ack code: {self.ack_code} - Radio node ID: {self.radio_node_id} - "
+            f"Ack code: {self.ack_code} - Radio node ID: {self.radio_node_id} - "  # noqa: E501
             f"Radio link quality: {self.rf_radio_link_quality} - "
             f"UTC time: {self.last_pressed}"
         )
 
     def __repr__(self) -> str:
         return (
-            f'{self.type.__name__}({self.id},"{self.name}",'
+            f'{type(self).__name__}({self.id},"{self.name}",'
             f"button_type={self.button_type},address={self.address},"
             f"ack_code={self.ack_code},radio_node_id={self.radio_node_id},"
             f"rf_radio_link_quality={self.rf_radio_link_quality},"
@@ -780,7 +774,7 @@ class Scenario(CameEntity):
     Represents a CAME scenario.
     """
 
-    _DEFAULT_STATUS = EntityStatus.OFF_CLOSED
+    _DEFAULT_STATUS = EntityStatus.OFF_STOPPED
     _DEFAULT_SCENARIO_STATUS = ScenarioStatus.NOT_APPLIED
     _DEFAULT_ICON_ID = ScenarioIcon.UNKNOWN
 
@@ -789,7 +783,7 @@ class Scenario(CameEntity):
         entity_id: int,
         name: str = None,
         *,
-        status: EntityStatus = EntityStatus.OFF_CLOSED,
+        status: EntityStatus = EntityStatus.OFF_STOPPED,
         scenario_status: ScenarioStatus = ScenarioStatus.NOT_APPLIED,
         icon: ScenarioIcon = ScenarioIcon.UNKNOWN,
         is_user_defined: bool = False,
@@ -846,14 +840,14 @@ class Scenario(CameEntity):
 
     def __str__(self) -> str:
         return (
-            f"{self.type.__name__} #{self.id}: {self.name} - "
-            f"Status: {self.status.name} - Scenario status: {self.scenario_status.name} - "
+            f"{type(self).__name__} #{self.id}: {self.name} - "
+            f"Status: {self.status.name} - Scenario status: {self.scenario_status.name} - "  # noqa: E501 # pylint: disable=line-too-long
             f"Icon: {self.icon.name} - User defined: {self.is_user_defined}"
         )
 
     def __repr__(self) -> str:
         return (
-            f'{self.type.__name__}({self.id},"{self.name}",'
+            f'{type(self).__name__}({self.id},"{self.name}",'
             f"status={self.status},scenario_status={self.scenario_status},"
             f"icon={self.icon},is_user_defined={self.is_user_defined})"
         )
@@ -927,6 +921,12 @@ EntityType2Class = {
     # EntityType.ANALOGIN:
     # EntityType.USERS:
     # EntityType.MAPS:
+}
+
+Class2SwitchCommand = {
+    Light: "light_switch_req",
+    Opening: "opening_move_req",
+    Scenario: "scenario_activation_req",
 }
 
 # endregion

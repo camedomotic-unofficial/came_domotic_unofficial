@@ -24,12 +24,15 @@ Tests of real usage of the library
 # from hypothesis import given
 # from hypothesis.strategies import integers, text, sampled_from, lists
 
+import time
 from came_domotic_unofficial import (
     CameETIDomoServer,
     # CameDomoticServerNotFoundError,
 )
 from came_domotic_unofficial.models import (
+    EntityStatus,
     EntityType,
+    Light,
 )
 
 
@@ -59,10 +62,6 @@ def test_check_standard_usage():
         entites = domo.get_entities()
         assert len(entites) > 0
 
-        entities = domo.get_entities(EntityType.LIGHTS)
-        assert len(entities) == 29
-        # print(entities)
-
         entities = domo.get_entities(EntityType.OPENINGS)
         assert len(entities) == 9
         # print(entities)
@@ -76,11 +75,42 @@ def test_check_standard_usage():
         assert len(entities) == 8
         # print(len(entities))
 
-        # domo.set_entity_status(my_light, EntityStatus.ON_OPEN, brightness=80)
-        # print(my_light.status)
-        # assert my_light.status == EntityStatus.ON_OPEN
+        entities = domo.get_entities(EntityType.LIGHTS)
+        assert len(entities) == 29
+        # print(entities)
+        # print(entities[0].name)
 
-        # print(lights[0].name)
+        assert domo.set_entity_status(
+            Light, 13, EntityStatus.ON_OPEN, brightness=40
+        )
+
+        time.sleep(3)
+
+        assert domo.set_entity_status(
+            Light, 13, EntityStatus.OFF_STOPPED, brightness=12
+        )
+
+        asd = Light(4)
+
+        asd.id
+
+        # assert domo.set_entity_status(Opening, 73, EntityStatus.CLOSED)
+        # assert domo.set_entity_status(Scenario, 1)
+
+        # time.sleep(2)
+
+        # assert domo.set_entity_status(
+        #     Light, 13, EntityStatus.OFF_STOPPED, brightness=12
+        # )
+        # assert domo.set_entity_status(Opening, 73, EntityStatus.OFF_STOPPED)
+
+        # time.sleep(2)
+
+        # assert domo.set_entity_status(Opening, 73, EntityStatus.ON_OPEN)
+
+        # time.sleep(2)
+
+        # assert domo.set_entity_status(Scenario, 2)
 
         # if domo.logout():
         #     print("Logout completed.")
