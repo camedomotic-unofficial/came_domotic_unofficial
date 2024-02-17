@@ -123,5 +123,5 @@ by [CAME](https://www.came.com/). Use at your own risk.
 
 **Important:** This library is currently in a pre-alpha development state.
 It is not yet stable and should be used only for studying purposes.
-Please be aware that you cannot rely on it for any production use
+Please be aware that you cannot rely on it for any production use.
 Use at your own risk.
