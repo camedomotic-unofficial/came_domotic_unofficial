@@ -84,7 +84,7 @@ def test_check_standard_usage():
             Light, 13, EntityStatus.ON_OPEN, brightness=40
         )
 
-        time.sleep(3)
+        time.sleep(1)
 
         assert domo.set_entity_status(
             Light, 13, EntityStatus.OFF_STOPPED, brightness=12

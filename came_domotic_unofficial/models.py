@@ -266,7 +266,7 @@ class CameEntity:
         return hash((type(self), self.__repr__()))
 
 
-class CameEntitiesSet(set):
+class CameEntitySet(set):
     """Represents a set of CAME entities.
 
     :param entities: the list of entities to add to the set (optional).
@@ -339,7 +339,7 @@ class Feature(CameEntity):
     #     return hash((type(self), self.name))
 
 
-class FeaturesSet(CameEntitiesSet):
+class FeaturesSet(CameEntitySet):
     """Represents a set of features managed by a CAME ETI/Domo server.
 
     :method add: adds a Feature object to the set, validating its type.

@@ -54,7 +54,7 @@ from came_domotic_unofficial.models import (
     CameDomoticServerNotFoundError,
     CameDomoticAuthError,
     CameDomoticRequestError,
-    CameEntitiesSet,
+    CameEntitySet,
     CameEntity,
     _Class2SwitchCommand,
     EntityStatus,
@@ -339,7 +339,7 @@ class CameETIDomoServer:
 
         return self._features
 
-    def get_entities(self, entity_type: EntityType = None) -> CameEntitiesSet:
+    def get_entities(self, entity_type: EntityType = None) -> CameEntitySet:
         """Returns the list of entities managed by the server."""
 
         if not self._entities or len(self._entities) == 0:
@@ -356,7 +356,7 @@ class CameETIDomoServer:
                 )
 
             # requested_type = type(_EntityType2Class[entity_type])
-            return CameEntitiesSet(
+            return CameEntitySet(
                 {
                     item
                     for item in self._entities
@@ -848,7 +848,7 @@ status code: {response.status_code}"
             self._fetch_features_list()
 
         # For each feature, fetch the entities
-        entities = CameEntitiesSet()
+        entities = CameEntitySet()
         for feature in self._features:
             entities.update(self._fetch_entities_list_by_feature(feature))
 
@@ -857,7 +857,7 @@ status code: {response.status_code}"
     @ensure_login
     def _fetch_entities_list_by_feature(
         self, feature: Feature
-    ) -> CameEntitiesSet:  # noqa: E501
+    ) -> CameEntitySet:  # noqa: E501
 
         try:
             entity_type = EntityType[feature.name.upper()]
@@ -865,7 +865,7 @@ status code: {response.status_code}"
             _LOGGER.warning(
                 "Feature '%s' not supported. Skipping.", feature.name
             )
-            return CameEntitiesSet()
+            return CameEntitySet()
 
         if entity_type in {
             EntityType.LIGHTS,
@@ -912,7 +912,7 @@ status code: {response.status_code}"
 
                 if resp["sl_data_ack_reason"] == 0:
                     # Create the entities
-                    entities = CameEntitiesSet(
+                    entities = CameEntitySet(
                         _EntityType2Class[entity_type].from_json(item)
                         for item in resp["array"]
                     )
@@ -961,7 +961,7 @@ status code: {response.status_code}"
         # raise CameDomoticRequestError("Unexpected error trying to \
         # get the entities for the feature {feature.name}") from e
 
-        return CameEntitiesSet()
+        return CameEntitySet()
 
     # endregion
 
