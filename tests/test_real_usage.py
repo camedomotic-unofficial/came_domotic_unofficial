@@ -90,10 +90,6 @@ def test_check_standard_usage():
             Light, 13, EntityStatus.OFF_STOPPED, brightness=12
         )
 
-        asd = Light(4)
-
-        asd.id
-
         # assert domo.set_entity_status(Opening, 73, EntityStatus.CLOSED)
         # assert domo.set_entity_status(Scenario, 1)
 

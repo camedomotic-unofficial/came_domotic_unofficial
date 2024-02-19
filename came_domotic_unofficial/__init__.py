@@ -56,10 +56,10 @@ from came_domotic_unofficial.models import (
     CameDomoticRequestError,
     CameEntitiesSet,
     CameEntity,
-    Class2SwitchCommand,
+    _Class2SwitchCommand,
     EntityStatus,
     EntityType,
-    EntityType2Class,
+    _EntityType2Class,
     Feature,
     FeaturesSet,
     Light,
@@ -263,8 +263,11 @@ class CameETIDomoServer:
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Handle exception, if any
         if exc_type is not None:
-            _LOGGER.error("An error occurred: %s. Traceback: %s",
-                          exc_val, traceback.format_exc())
+            _LOGGER.error(
+                "An error occurred: %s. Traceback: %s",
+                exc_val,
+                traceback.format_exc(),
+            )
 
         # Dispose the resources
         self.__del__()
@@ -346,28 +349,32 @@ class CameETIDomoServer:
         # Return a subset of entities if entity_type is specified
         if entity_type is not None:
             # TODO Add new mappings once new entity classes are implemented
-            if entity_type not in EntityType2Class:
+            if entity_type not in _EntityType2Class:
                 raise ValueError(
                     "Invalid entity type. Supported values are: "
-                    f"{EntityType2Class.keys()}"
+                    f"{_EntityType2Class.keys()}"
                 )
 
-            # requested_type = type(EntityType2Class[entity_type])
+            # requested_type = type(_EntityType2Class[entity_type])
             return CameEntitiesSet(
-                {item for item in self._entities if isinstance(item, EntityType2Class[entity_type])}  # noqa: E501 # pylint: disable=line-too-long
+                {
+                    item
+                    for item in self._entities
+                    if isinstance(item, _EntityType2Class[entity_type])
+                }
             )
         else:
             return self._entities
 
     @ensure_login
     def set_entity_status(
-            self,
-            entity_type: type,
-            entity_id: int,
-            status: EntityStatus = None,
-            *,
-            brightness=None
-            ) -> bool:
+        self,
+        entity_type: type,
+        entity_id: int,
+        status: EntityStatus = None,
+        *,
+        brightness=None,
+    ) -> bool:
         """
         Sets the status of an entity. Currently supported: ligts, openings and
         scenarios.
@@ -390,8 +397,11 @@ class CameETIDomoServer:
         if entity_type is Light or entity_type is Opening:
             if status is None or not isinstance(status, EntityStatus):
                 raise TypeError("status must be an EntityStatus")
-            if (brightness is not None and not isinstance(brightness, int)
-                    and 0 <= brightness <= 100):
+            if (
+                brightness is not None
+                and not isinstance(brightness, int)
+                and 0 <= brightness <= 100
+            ):
                 raise TypeError("brightness must be between 0 and 100")
 
         if entity_type not in {Light, Opening, Scenario}:
@@ -446,7 +456,7 @@ class CameETIDomoServer:
         request_data = {
             "sl_appl_msg": {
                 "client": self._session_id,
-                "cmd_name": Class2SwitchCommand[entity_type],
+                "cmd_name": _Class2SwitchCommand[entity_type],
                 "cseq": self._cseq,
             },
             "sl_appl_msg_type": "domo",
@@ -520,7 +530,7 @@ class CameETIDomoServer:
         # Create the keep alive request
         request_data = {
             "sl_client_id": self._session_id,
-            "sl_cmd": "sl_keep_alive_req"
+            "sl_cmd": "sl_keep_alive_req",
         }
 
         try:
@@ -542,9 +552,7 @@ class CameETIDomoServer:
                 _LOGGER.debug("Keep alive successful.")
                 return True
             else:
-                _LOGGER.error(
-                    "Keep alive failed. Response: %s", response
-                )
+                _LOGGER.error("Keep alive failed. Response: %s", response)
         except CameDomoticRequestError as e:
             _LOGGER.error("Error trying to keep alive. Error: %s", e)
         except Exception as e:  # pylint: disable=broad-exception-caught
@@ -570,7 +578,8 @@ class CameETIDomoServer:
         except Exception as e:  # pylint: disable=broad-exception-caught
             _LOGGER.error(
                 "Unexpected error disposing the resources. Error: %s\n%s",
-                e, traceback.format_exc(),
+                e,
+                traceback.format_exc(),
             )
 
     # endregion
@@ -659,7 +668,7 @@ class CameETIDomoServer:
         # Create the login request
         request_data = {
             "sl_client_id": self._session_id,
-            "sl_cmd": "sl_logout_req"
+            "sl_cmd": "sl_logout_req",
         }
 
         try:
@@ -681,9 +690,7 @@ class CameETIDomoServer:
             ):
                 # Reset the session
                 self._session_id = ""
-                self._session_expiration_timestamp = datetime.now(
-                    timezone.utc
-                )
+                self._session_expiration_timestamp = datetime.now(timezone.utc)
 
                 _LOGGER.debug("Logged off.")
                 return True
@@ -697,9 +704,7 @@ class CameETIDomoServer:
             _LOGGER.error("Error trying to logoff. Error: %s", e)
             return False
         except Exception as e:  # pylint: disable=broad-exception-caught
-            _LOGGER.error(
-                "Unexpected error trying to logoff. Error: %s", e
-            )
+            _LOGGER.error("Unexpected error trying to logoff. Error: %s", e)
             return False
 
     def _send_command(self, data: dict) -> requests.Response:
@@ -805,11 +810,7 @@ status code: {response.status_code}"
                 self._type = resp["type"]
                 self._board = resp["board"]
                 self._serial_number = resp["serial"]
-
-                result_features = FeaturesSet()
-                for item in resp["list"]:
-                    result_features.add(Feature(item))
-                self._features = result_features
+                self._features = FeaturesSet.from_json(resp["list"])
 
                 _LOGGER.debug("Features retrieved: %s", self._features)
                 return True
@@ -818,8 +819,10 @@ status code: {response.status_code}"
                     "Features retrieval failed. SL_DATA_ACK_REASON: %s",
                     resp["sl_data_ack_reason"],
                 )
-                raise CameDomoticBadAckError(f"Features retrieval failed. \
-SL_DATA_ACK_REASON: {resp["sl_data_ack_reason"]}")
+                raise CameDomoticBadAckError(
+                    resp["sl_data_ack_reason"],
+                    "Features list retrieval failed.",
+                )
         except CameDomoticBadAckError as e:
             raise e
         except CameDomoticRequestError as e:
@@ -852,7 +855,9 @@ SL_DATA_ACK_REASON: {resp["sl_data_ack_reason"]}")
         self._entities = entities
 
     @ensure_login
-    def _fetch_entities_list_by_feature(self, feature: Feature) -> CameEntitiesSet:  # noqa: E501
+    def _fetch_entities_list_by_feature(
+        self, feature: Feature
+    ) -> CameEntitiesSet:  # noqa: E501
 
         try:
             entity_type = EntityType[feature.name.upper()]
@@ -863,11 +868,11 @@ SL_DATA_ACK_REASON: {resp["sl_data_ack_reason"]}")
             return CameEntitiesSet()
 
         if entity_type in {
-                EntityType.LIGHTS,
-                EntityType.OPENINGS,
-                EntityType.DIGITALIN,
-                EntityType.SCENARIOS,
-                }:
+            EntityType.LIGHTS,
+            EntityType.OPENINGS,
+            EntityType.DIGITALIN,
+            EntityType.SCENARIOS,
+        }:
             # Input data example
             # {
             #     "sl_appl_msg": {
@@ -908,9 +913,9 @@ SL_DATA_ACK_REASON: {resp["sl_data_ack_reason"]}")
                 if resp["sl_data_ack_reason"] == 0:
                     # Create the entities
                     entities = CameEntitiesSet(
-                        EntityType2Class[entity_type]
-                        .from_json(item) for item in resp["array"]
-                      )
+                        _EntityType2Class[entity_type].from_json(item)
+                        for item in resp["array"]
+                    )
                     _LOGGER.debug("Entities retrieved: %s", entities)
                     return entities
                 else:
@@ -919,9 +924,10 @@ SL_DATA_ACK_REASON: {resp["sl_data_ack_reason"]}")
                         feature.name,
                         resp["sl_data_ack_reason"],
                     )
-                    raise CameDomoticBadAckError(f"Entity {feature.name} "
-                                    "retrieval failed. SL_DATA_ACK_REASON: " # noqa E128
-                                    f"{resp["sl_data_ack_reason"]}") # noqa E128
+                    raise CameDomoticBadAckError(
+                        resp["sl_data_ack_reason"],
+                        f"Info retrieval for feature '{feature.name}' failed.",
+                    )
             except CameDomoticBadAckError as e:
                 _LOGGER.error("%s\n%s", e, traceback.format_exc())
                 # raise e
@@ -942,8 +948,8 @@ SL_DATA_ACK_REASON: {resp["sl_data_ack_reason"]}")
                     e,
                     traceback.format_exc(),
                 )
-#                 raise CameDomoticRequestError("Unexpected KeyError trying to\
-# get the entities for the feature {feature.name}") from e
+            # raise CameDomoticRequestError("Unexpected KeyError trying to\
+            # get the entities for the feature {feature.name}") from e
             except Exception as e:  # pylint: disable=broad-exception-caught
                 _LOGGER.error(
                     "Unexpected error trying to get the entities for "
@@ -952,8 +958,8 @@ SL_DATA_ACK_REASON: {resp["sl_data_ack_reason"]}")
                     e,
                     traceback.format_exc(),
                 )
-#                 raise CameDomoticRequestError("Unexpected error trying to \
-# get the entities for the feature {feature.name}") from e
+        # raise CameDomoticRequestError("Unexpected error trying to \
+        # get the entities for the feature {feature.name}") from e
 
         return CameEntitiesSet()
 
