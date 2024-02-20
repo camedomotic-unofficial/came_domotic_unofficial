@@ -23,6 +23,7 @@ Library to interact with a CAME ETI/Domo domotic server.
 - **Lights**: get list, switch on/off, set brightness (if dimmable).
 - **Openings**: get list, close, stop, open.
 - **Scenarios**: get list, activate.
+- **Digital inputs**: get list.
 
 ## Usage
 
@@ -65,19 +66,21 @@ with CameETIDomoServer(
     # Get the list of features supported by the CAME server
     features = domo.get_features()
 
-    # Get the list of all the entities configured on the CAME server (lights, openings, scenarios, etc.)
+    # Get the list of all the entities configured on the CAME server
     all_my_entites = domo.get_entities()
 
-    # Get only a subset by entity type
+    # Get only a subset, by entity type
     my_lights = domo.get_entities(EntityType.LIGHTS)
     my_openings = domo.get_entities(EntityType.OPENINGS)
     my_scenarios = domo.get_entities(EntityType.SCENARIOS)
+    my_digital_inputs = domo.get_entities(EntityType.DIGITALIN)
 
 
     # Get a specific entity
     my_dimmable_lamp = my_lights[0]
     kitchen_opening = my_openings[0]
-    close_all_openings = my_scenarios[0]
+    scenario_close_all_openings = my_scenarios[0]
+    my_dimmable_lamp_button = my_digital_inputs[0]
 ```
 
 ### Set the status of an entity
@@ -112,16 +115,16 @@ with CameETIDomoServer(
 
 ## Acknowledgments
 
-Special thanks to Andrea Michielan for his [eti_domo](https://github.com/andrea-michielan/eti_domo) library,
-which significantly facilitated the development process of this library.
-His work was very helpful and greatly appreciated.
+Special thanks to Andrea Michielan for his [eti_domo](https://github.com/andrea-michielan/eti_domo)
+library, which significantly facilitated the development process
+of this library. His work was very helpful and greatly appreciated.
 
 ## Disclaimer
 
 This library is not affiliated with or endorsed or supported
 by [CAME](https://www.came.com/). Use at your own risk.
 
-**Important:** This library is currently in a pre-alpha development state.
+**Important**: This library is currently in a pre-alpha development state.
 It is not yet stable and should be used only for studying purposes.
 Please be aware that you cannot rely on it for any production use.
 Use at your own risk.
