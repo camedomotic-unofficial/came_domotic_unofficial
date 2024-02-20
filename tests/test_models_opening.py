@@ -107,13 +107,13 @@ def test_opening_str_method():
         1,
         "Test Opening",
         close_entity_id=2,
-        status=EntityStatus.ON_OPEN,
+        status=EntityStatus.ON_OPEN_TRIGGERED,
         opening_type=OpeningType.OPEN_CLOSE,
     )
 
     assert str(opening) == (
         'Opening #1/2: "Test Opening" - Type: OPEN_CLOSE - '
-        "Status: ON_OPEN - Partials: []"
+        "Status: ON_OPEN_TRIGGERED - Partials: []"
     )
 
 
@@ -125,12 +125,12 @@ def test_opening_repr_method():
         1,
         "Test Opening",
         close_entity_id=2,
-        status=EntityStatus.ON_OPEN,
+        status=EntityStatus.ON_OPEN_TRIGGERED,
         opening_type=OpeningType.OPEN_CLOSE,
     )
 
     assert repr(opening) == (
-        'Opening(1,2,"Test Opening",status=EntityStatus.ON_OPEN,'
+        'Opening(1,2,"Test Opening",status=EntityStatus.ON_OPEN_TRIGGERED,'
         "opening_type=OpeningType.OPEN_CLOSE,partial_openings=[])"
     )
 
@@ -151,7 +151,7 @@ def test_opening_equality_hash_operators():
     )
     opening4 = Opening(2, opening_name)
     opening5 = Opening(1, opening_name + "_")
-    opening6 = Opening(1, opening_name, status=EntityStatus.ON_OPEN)
+    opening6 = Opening(1, opening_name, status=EntityStatus.ON_OPEN_TRIGGERED)
     other_type1 = CameEntity(1, opening_name, status=EntityStatus.UNKNOWN)
     other_type2 = repr(opening1)
     other_type3 = opening_name

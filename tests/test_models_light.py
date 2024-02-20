@@ -113,14 +113,14 @@ def test_light_str_method():
     light = Light(
         1,
         "Test Light",
-        status=EntityStatus.ON_OPEN,
+        status=EntityStatus.ON_OPEN_TRIGGERED,
         light_type=LightType.DIMMABLE,
         brightness=50,
     )
 
     assert str(light) == (
         "Light #1: Test Light - Type: (DIMMABLE) - "
-        "Status: ON_OPEN - Brightness: 50"
+        "Status: ON_OPEN_TRIGGERED - Brightness: 50"
     )
 
 
@@ -131,13 +131,13 @@ def test_light_repr_method():
     light = Light(
         1,
         "Test Light",
-        status=EntityStatus.ON_OPEN,
+        status=EntityStatus.ON_OPEN_TRIGGERED,
         light_type=LightType.DIMMABLE,
         brightness=50,
     )
 
     assert repr(light) == (
-        'Light(1,"Test Light",status=EntityStatus.ON_OPEN,'
+        'Light(1,"Test Light",status=EntityStatus.ON_OPEN_TRIGGERED,'
         "light_type=LightType.DIMMABLE,brightness=50)"
     )
 
@@ -152,7 +152,7 @@ def test_light_equality_hash_operators():
     light3 = Light(1, light_name, status=EntityStatus.UNKNOWN)
     light4 = Light(2, light_name, status=EntityStatus.UNKNOWN)
     light5 = Light(1, light_name + "_", status=EntityStatus.UNKNOWN)
-    light6 = Light(1, light_name, status=EntityStatus.ON_OPEN)
+    light6 = Light(1, light_name, status=EntityStatus.ON_OPEN_TRIGGERED)
     other_type1 = CameEntity(1, light_name, status=EntityStatus.UNKNOWN)
     other_type2 = repr(light1)
     other_type3 = light_name

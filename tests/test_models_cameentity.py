@@ -56,16 +56,16 @@ def test_came_entity_init_invalid_name():
     """
     Test the initialization of the CameEntity class with an invalid name.
     """
-    with pytest.raises(TypeError):
-        CameEntity(1, 2)
+    entity = CameEntity(1, 2)
+    assert entity.name == "Unknown"
 
 
 def test_came_entity_init_invalid_status():
     """
     Test the initialization of the CameEntity class with an invalid status.
     """
-    with pytest.raises(TypeError):
-        CameEntity(1, "Test", status="Not a valid status")
+    entity = CameEntity(1, "Test", status="Not a valid status")
+    assert entity.status == EntityStatus.UNKNOWN
 
 
 def test_came_entity_init_no_status():
@@ -161,7 +161,7 @@ def test_came_entity_ne(entity_id, name, status):
         status=(
             EntityStatus.UNKNOWN
             if status != EntityStatus.UNKNOWN
-            else EntityStatus.ON_OPEN
+            else EntityStatus.ON_OPEN_TRIGGERED
         ),
     )
     came_entity_identical = CameEntity(entity_id, name, status=status)

@@ -105,7 +105,7 @@ class EntityStatus(CameEnum):
     """Enum listing all the status of the CAME entities."""
 
     OFF_STOPPED = 0
-    ON_OPEN = 1
+    ON_OPEN_TRIGGERED = 1
     CLOSED = 2
     UNKNOWN = -1
     NOT_APPLICABLE = -99
@@ -150,7 +150,7 @@ class ScenarioStatus(CameEnum):
 class SeasonSetting(Enum):
     """Enum listing the available seasons settings."""
 
-    PLAMT_OFF = "off"
+    PLANT_OFF = "off"
     WINTER = "winter"
     SUMMER = "summer"
 
@@ -200,14 +200,18 @@ class CameEntity:
         # Validate the input.
         if not isinstance(entity_id, int):
             raise TypeError("The entity ID must be an integer")
-        if name is not None and not isinstance(name, str):
-            raise TypeError("The entity name must be a string")
-        if status and status not in EntityStatus:
-            raise TypeError("The entity status must be a valid EntityStatus")
 
         self._id = entity_id
-        self._name = self._DEFAULT_NAME if name is None or name == "" else name
-        self._status = status if status else self._DEFAULT_STATUS
+        self._name = (
+            name
+            if name and isinstance(name, str) and name != ""
+            else self._DEFAULT_NAME
+        )
+        self._status = (
+            status
+            if status and status in EntityStatus
+            else self._DEFAULT_STATUS
+        )
 
     @property
     def id(self) -> int:
@@ -897,7 +901,7 @@ class Scenario(CameEntity):
     :method from_json: create a Scenario object from a JSON dictionary.
     """
 
-    _DEFAULT_STATUS = EntityStatus.OFF_STOPPED
+    _DEFAULT_STATUS = EntityStatus.UNKNOWN
     _DEFAULT_SCENARIO_STATUS = ScenarioStatus.NOT_APPLIED
     _DEFAULT_ICON_ID = ScenarioIcon.UNKNOWN
 
@@ -906,11 +910,34 @@ class Scenario(CameEntity):
         entity_id: int,
         name: str = None,
         *,
-        status: EntityStatus = EntityStatus.OFF_STOPPED,
-        scenario_status: ScenarioStatus = ScenarioStatus.NOT_APPLIED,
-        icon: ScenarioIcon = ScenarioIcon.UNKNOWN,
+        status: EntityStatus = _DEFAULT_STATUS,
+        scenario_status: ScenarioStatus = _DEFAULT_SCENARIO_STATUS,
+        icon: ScenarioIcon = _DEFAULT_ICON_ID,
         is_user_defined: bool = False,
     ):
+        """
+        Constructor for the Came Scenario class.
+
+        Args:
+            entity_id (int): the scenario ID.
+            name (str, optional): the scenario name. Defaults to "Unknown" if None or empty.
+            status (EntityStatus, optional): the scenario status. Defaults to UNKNOWN.
+            scenario_status (ScenarioStatus, optional): the scenario status. Defaults to NOT_APPLIED.
+            icon (ScenarioIcon, optional): the scenario icon type. Defaults to UNKNOWN.
+            is_user_defined (bool, optional): whether the scenario is user defined. Defaults to False.
+        """
+
+        # Validate the input
+        if scenario_status not in ScenarioStatus:
+            raise TypeError(
+                "The scenario status must be a valid ScenarioStatus"
+            )
+        if icon not in ScenarioIcon:
+            raise TypeError("The scenario icon must be a valid ScenarioIcon")
+        if is_user_defined is not None and not isinstance(
+            is_user_defined, bool
+        ):
+            raise TypeError("The is_user_defined value must be a boolean")
 
         self._scenario_status = scenario_status
         self._icon = icon
@@ -930,7 +957,19 @@ class Scenario(CameEntity):
 
     @scenario_status.setter
     def scenario_status(self, value: ScenarioStatus):
-        """Sets the scenario status."""
+        """Sets the scenario status.
+
+        Args:
+            value (ScenarioStatus): the scenario status.
+
+        Raises:
+            TypeError: if the value is not a valid ScenarioStatus.
+        """
+        if value not in ScenarioStatus:
+            raise TypeError(
+                "The scenario status must be a valid ScenarioStatus"
+            )
+
         self._scenario_status = value
 
     @property
@@ -945,7 +984,7 @@ class Scenario(CameEntity):
 
     def __str__(self) -> str:
         return (
-            f"{type(self).__name__} #{self.id}: {self.name} - "
+            f'{type(self).__name__} #{self.id}: "{self.name}" - '
             f"Status: {self.status.name} - Scenario status: {self.scenario_status.name} - "  # noqa: E501 # pylint: disable=line-too-long
             f"Icon: {self.icon.name} - User defined: {self.is_user_defined}"
         )
@@ -1010,6 +1049,7 @@ class Scenario(CameEntity):
             is_user_defined=(
                 bool(json_data["user-defined"])
                 if "user-defined" in json_data
+                and isinstance(json_data["user-defined"], int)
                 else False
             ),
         )
