@@ -18,7 +18,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "came_domotic_unofficial-fredericks1982"
-version = "0.6.0"
+version = "0.6.0.post2"
 description = "Library to interact with a CAME ETI/Domo domotic server"
 authors = [{ name = "fredericks1982", email = "fredericks1982@gmail.com" }]
 maintainers = [{ name = "fredericks1982", email = "fredericks1982@gmail.com" }]
