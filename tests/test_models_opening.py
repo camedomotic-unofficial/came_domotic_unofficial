@@ -34,9 +34,7 @@ from came_domotic_unofficial.models import (
     status=sampled_from(EntityStatus),
     opening_type=sampled_from(OpeningType),
 )
-def test_opening_constructor(
-    entity_id, close_entity_id, name, status, opening_type
-):
+def test_opening_constructor(entity_id, close_entity_id, name, status, opening_type):
     """
     Test if the Opening constructor works correctly.
     """
@@ -182,9 +180,7 @@ def test_opening_equality_hash_operators():
     status=sampled_from(EntityStatus),
     opening_type=sampled_from(OpeningType),
 )
-def test_opening_from_json(
-    entity_id, close_entity_id, name, status, opening_type
-):
+def test_opening_from_json(entity_id, close_entity_id, name, status, opening_type):
     """
     Test if the Opening from_json method works correctly.
     """

@@ -58,9 +58,7 @@ class CameDomoticBadAckError(CameDomoticRequestError):
         if ack_code is None:
             super().__init__("Bad ack code.")
         elif reason and len(str(reason)) > 0:
-            super().__init__(
-                f"Bad ack code: {str(ack_code)} - Reason: {str(reason)}"
-            )
+            super().__init__(f"Bad ack code: {str(ack_code)} - Reason: {str(reason)}")
         else:
             super().__init__(f"Bad ack code: {str(ack_code)}")
 
@@ -208,9 +206,7 @@ class CameEntity:
             else self._DEFAULT_NAME
         )
         self._status = (
-            status
-            if status and status in EntityStatus
-            else self._DEFAULT_STATUS
+            status if status and status in EntityStatus else self._DEFAULT_STATUS
         )
 
     @property
@@ -254,14 +250,11 @@ class CameEntity:
 
     def __repr__(self) -> str:
         return (
-            f'{type(self).__name__}({self.id},"{self.name}",'
-            f"status={self.status})"
+            f'{type(self).__name__}({self.id},"{self.name}",' f"status={self.status})"
         )
 
     def __eq__(self, other: object) -> bool:
-        return (
-            type(self) is type(other) and self.__repr__() == other.__repr__()
-        )
+        return type(self) is type(other) and self.__repr__() == other.__repr__()
 
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
@@ -575,20 +568,14 @@ class Opening(CameEntity):
         """
 
         # Input validation
-        if close_entity_id is not None and not isinstance(
-            close_entity_id, int
-        ):
+        if close_entity_id is not None and not isinstance(close_entity_id, int):
             raise TypeError("The closing entity ID must be an integer")
         if opening_type not in OpeningType:
             raise TypeError("The opening type must be a valid OpeningType")
-        if partial_openings is not None and not isinstance(
-            partial_openings, list
-        ):
+        if partial_openings is not None and not isinstance(partial_openings, list):
             raise TypeError("The partial openings must be a list")
 
-        self._close_entity_id = (
-            close_entity_id if close_entity_id else entity_id
-        )
+        self._close_entity_id = close_entity_id if close_entity_id else entity_id
         self._opening_type = (
             opening_type if opening_type else self._DEFAULT_OPENING_TYPE
         )
@@ -691,8 +678,7 @@ class Opening(CameEntity):
             ),
             partial_openings=(
                 json_data["partial"]
-                if "partial" in json_data
-                and isinstance(json_data["partial"], list)
+                if "partial" in json_data and isinstance(json_data["partial"], list)
                 else None
             ),
         )
@@ -736,9 +722,7 @@ class DigitalInput(CameEntity):
 
         # Validate the input
         if button_type not in DigitalInputType:
-            raise TypeError(
-                "The digital input type must be a valid DigitalInType"
-            )
+            raise TypeError("The digital input type must be a valid DigitalInType")
         if address is not None and not isinstance(address, int):
             raise TypeError("The digital input address must be an integer")
         if ack_code is not None and not isinstance(ack_code, int):
@@ -850,8 +834,7 @@ class DigitalInput(CameEntity):
             ),
             button_type=(
                 DigitalInputType(json_data["type"])
-                if "type" in json_data
-                and json_data["type"] in DigitalInputType
+                if "type" in json_data and json_data["type"] in DigitalInputType
                 else DigitalInput._DEFAULT_BUTTON_TYPE
             ),
             address=(
@@ -878,8 +861,7 @@ class DigitalInput(CameEntity):
             ),
             utc_time=(
                 json_data["utc_time"]
-                if "utc_time" in json_data
-                and isinstance(json_data["utc_time"], int)
+                if "utc_time" in json_data and isinstance(json_data["utc_time"], int)
                 else DigitalInput._DEFAULT_UTC_TIME
             ),
         )
@@ -920,7 +902,7 @@ class Scenario(CameEntity):
 
         Args:
             entity_id (int): the scenario ID.
-            name (str, optional): the scenario name. Defaults to "Unknown" if None or empty.
+            name (str, optional): the scenario name. Default: "Unknown" if None/empty.
             status (EntityStatus, optional): the scenario status. Defaults to UNKNOWN.
             scenario_status (ScenarioStatus, optional): the scenario status. Defaults to NOT_APPLIED.
             icon (ScenarioIcon, optional): the scenario icon type. Defaults to UNKNOWN.
@@ -929,14 +911,10 @@ class Scenario(CameEntity):
 
         # Validate the input
         if scenario_status not in ScenarioStatus:
-            raise TypeError(
-                "The scenario status must be a valid ScenarioStatus"
-            )
+            raise TypeError("The scenario status must be a valid ScenarioStatus")
         if icon not in ScenarioIcon:
             raise TypeError("The scenario icon must be a valid ScenarioIcon")
-        if is_user_defined is not None and not isinstance(
-            is_user_defined, bool
-        ):
+        if is_user_defined is not None and not isinstance(is_user_defined, bool):
             raise TypeError("The is_user_defined value must be a boolean")
 
         self._scenario_status = scenario_status
@@ -966,9 +944,7 @@ class Scenario(CameEntity):
             TypeError: if the value is not a valid ScenarioStatus.
         """
         if value not in ScenarioStatus:
-            raise TypeError(
-                "The scenario status must be a valid ScenarioStatus"
-            )
+            raise TypeError("The scenario status must be a valid ScenarioStatus")
 
         self._scenario_status = value
 
@@ -1024,14 +1000,11 @@ class Scenario(CameEntity):
         return Scenario(
             entity_id=json_data["id"],
             name=(
-                json_data["name"]
-                if "name" in json_data
-                else CameEntity._DEFAULT_NAME
+                json_data["name"] if "name" in json_data else CameEntity._DEFAULT_NAME
             ),
             status=(
                 EntityStatus(json_data["status"])
-                if "status" in json_data
-                and json_data["status"] in EntityStatus
+                if "status" in json_data and json_data["status"] in EntityStatus
                 else Scenario._DEFAULT_STATUS
             ),
             scenario_status=(
@@ -1042,8 +1015,7 @@ class Scenario(CameEntity):
             ),
             icon=(
                 ScenarioIcon(json_data["icon_id"])
-                if "icon_id" in json_data
-                and json_data["icon_id"] in ScenarioIcon
+                if "icon_id" in json_data and json_data["icon_id"] in ScenarioIcon
                 else Scenario._DEFAULT_ICON_ID
             ),
             is_user_defined=(

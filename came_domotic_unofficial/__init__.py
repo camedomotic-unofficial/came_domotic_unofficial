@@ -115,9 +115,7 @@ def ensure_login(func):
             except CameDomoticAuthError as e:
                 raise e
             except Exception as e:
-                _LOGGER.error(
-                    "Error trying to login with the server. Error: %s", e
-                )
+                _LOGGER.error("Error trying to login with the server. Error: %s", e)
                 raise CameDomoticAuthError(
                     "Error trying to login with the server"
                 ) from e
@@ -238,18 +236,14 @@ class CameETIDomoServer:
                     host,
                     response.status_code,
                 )
-                raise CameDomoticServerNotFoundError(
-                    f"Server '{host}' not available"
-                )
+                raise CameDomoticServerNotFoundError(f"Server '{host}' not available")
 
             _LOGGER.debug(
                 "The server '%s' is available.",
                 self._host,
             )
         except requests.exceptions.RequestException as e:
-            _LOGGER.error(
-                "The server '%s' is not available. Error: %s", host, e
-            )
+            _LOGGER.error("The server '%s' is not available. Error: %s", host, e)
             raise CameDomoticServerNotFoundError(
                 f"Server '{host}' not available"
             ) from e
@@ -405,9 +399,7 @@ class CameETIDomoServer:
                 raise TypeError("brightness must be between 0 and 100")
 
         if entity_type not in {Light, Opening, Scenario}:
-            _LOGGER.warning(
-                "Entity type '%s' not supported. Skipping.", entity_type
-            )
+            _LOGGER.warning("Entity type '%s' not supported. Skipping.", entity_type)
             return False
 
         # LIGHT - Input payload example
@@ -556,9 +548,7 @@ class CameETIDomoServer:
         except CameDomoticRequestError as e:
             _LOGGER.error("Error trying to keep alive. Error: %s", e)
         except Exception as e:  # pylint: disable=broad-exception-caught
-            _LOGGER.error(
-                "Unexpected error trying to keep alive. Error: %s", e
-            )
+            _LOGGER.error("Unexpected error trying to keep alive. Error: %s", e)
 
         return False
 
@@ -629,9 +619,7 @@ class CameETIDomoServer:
                 # before the actual expiration
                 self._session_expiration_timestamp = datetime.now(
                     timezone.utc
-                ) + timedelta(
-                    seconds=(response["sl_keep_alive_timeout_sec"] - 30)
-                )
+                ) + timedelta(seconds=(response["sl_keep_alive_timeout_sec"] - 30))
                 self._cseq = 0  # Reset the cseq sequence
 
                 _LOGGER.debug(
@@ -640,18 +628,14 @@ class CameETIDomoServer:
                 )
                 return True
             else:
-                _LOGGER.error(
-                    "The user is not authorized. Response: %s", response
-                )
+                _LOGGER.error("The user is not authorized. Response: %s", response)
                 return False
 
         except CameDomoticRequestError as e:
             _LOGGER.error("Error trying login with the server. Error: %s", e)
             return False
         except Exception as e:  # pylint: disable=broad-exception-caught
-            _LOGGER.error(
-                "Unexpected error trying login with the server. Error: %s", e
-            )
+            _LOGGER.error("Unexpected error trying login with the server. Error: %s", e)
             return False
 
     def _logout(self) -> bool:
@@ -695,9 +679,7 @@ class CameETIDomoServer:
                 _LOGGER.debug("Logged off.")
                 return True
             else:
-                _LOGGER.error(
-                    "The user is not authorized. Response: %s", response
-                )
+                _LOGGER.error("The user is not authorized. Response: %s", response)
                 return False
 
         except CameDomoticRequestError as e:
@@ -862,9 +844,7 @@ status code: {response.status_code}"
         try:
             entity_type = EntityType[feature.name.upper()]
         except KeyError:
-            _LOGGER.warning(
-                "Feature '%s' not supported. Skipping.", feature.name
-            )
+            _LOGGER.warning("Feature '%s' not supported. Skipping.", feature.name)
             return CameEntitySet()
 
         if entity_type in {
