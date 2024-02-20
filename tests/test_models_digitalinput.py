@@ -194,9 +194,7 @@ def test_digitalinput_equality_hash_operators():
     entity4 = DigitalInput(2, entity_name)
     entity5 = DigitalInput(1, entity_name + "_")
     entity6 = DigitalInput(1, entity_name, address=1)
-    other_type1 = CameEntity(
-        1, entity_name, status=EntityStatus.NOT_APPLICABLE
-    )
+    other_type1 = CameEntity(1, entity_name, status=EntityStatus.NOT_APPLICABLE)
     other_type2 = repr(entity1)
     other_type3 = entity_name
 

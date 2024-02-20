@@ -175,9 +175,7 @@ def test_scenario_equality_hash_operators():
     )
     scenario4 = Scenario(2, scenario_name)
     scenario5 = Scenario(1, scenario_name + "_")
-    scenario6 = Scenario(
-        1, scenario_name, status=EntityStatus.ON_OPEN_TRIGGERED
-    )
+    scenario6 = Scenario(1, scenario_name, status=EntityStatus.ON_OPEN_TRIGGERED)
     other_type1 = CameEntity(1, scenario_name, status=EntityStatus.UNKNOWN)
     other_type2 = repr(scenario1)
     other_type3 = scenario_name

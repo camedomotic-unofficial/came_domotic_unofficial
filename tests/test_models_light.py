@@ -182,9 +182,7 @@ def test_light_equality_hash_operators():
     light_type=sampled_from(["STEP_STEP", "DIMMER"]),
     brightness=integers(min_value=0, max_value=100),
 )
-def test_light_from_json_method(
-    entity_id, name, status, light_type, brightness
-):
+def test_light_from_json_method(entity_id, name, status, light_type, brightness):
     """
     Test if the Light from_json method works correctly.
     """
