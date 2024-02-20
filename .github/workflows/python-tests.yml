@@ -18,20 +18,16 @@
 name: Execute unit tests and publish to TestPyPI
 
 on:
-  push:
-    branches: [ "main" ]
-    paths:
-      - 'pyproject.toml' # where package version is defined
   pull_request:
+    types: [closed]
     branches: [ "main" ]
-    paths:
-      - 'pyproject.toml' # where package version is defined
 
 permissions:
   contents: read
 
 jobs:
   build:
+    if: github.event.pull_request.merged == true
     environment: testpypi
     runs-on: ubuntu-latest
     permissions:
