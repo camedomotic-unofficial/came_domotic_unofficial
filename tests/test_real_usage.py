@@ -24,7 +24,9 @@ Tests of real usage of the library
 # from hypothesis import given
 # from hypothesis.strategies import integers, text, sampled_from, lists
 
+import os
 import time
+import pytest
 from came_domotic_unofficial import (
     CameETIDomoServer,
     # CameDomoticServerNotFoundError,
@@ -39,6 +41,10 @@ from came_domotic_unofficial.models import (
 # region check standard usage
 
 
+@pytest.mark.skipif(
+    os.getenv("GITHUB_ACTIONS") == "true",
+    reason="Skipping this test on GitHub Actions.",
+)
 def test_check_standard_usage():
     """
     Test that the _send_command method raises a CameDomoticRequestError
