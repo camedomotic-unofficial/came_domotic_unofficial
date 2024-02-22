@@ -59,7 +59,7 @@ jobs:
         # skip-existing: true
 
   test:
-    needs: build_and_publish_testpypi
+    # needs: build_and_publish_testpypi
     environment: testpypi
     runs-on: ubuntu-latest
     steps:

@@ -1,10 +1,10 @@
-name: GitGuardian scan
+name: Security checks (triggered)
 
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
 
-  secret_scanning:
+  gitguardian_secret_scanning:
     name: GitGuardian scan
     runs-on: ubuntu-latest
     steps:
