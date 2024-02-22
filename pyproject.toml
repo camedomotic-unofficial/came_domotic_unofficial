@@ -13,12 +13,13 @@
 # limitations under the License. 
 
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=64", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "came_domotic_unofficial-fredericks1982"
-version = "0.6.0.post7"
+# version = "0.6.0.post7"
+dynamic = ["version"]
 description = "Library to interact with a CAME ETI/Domo domotic server"
 authors = [{ name = "fredericks1982", email = "fredericks1982@gmail.com" }]
 maintainers = [{ name = "fredericks1982", email = "fredericks1982@gmail.com" }]
@@ -41,6 +42,10 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = ["hypothesis", "pytest", "requests"]
+
 [project.urls]
 Homepage = "https://github.com/fredericks1982/came_domotic_unofficial"
 Issues = "https://github.com/fredericks1982/came_domotic_unofficial/issues"
+
+[tool.setuptools_scm]
+version_file = "came_domotic_unofficial/_version.py"
