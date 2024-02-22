@@ -1,0 +1,52 @@
+name: "Security checks (scheduled)"
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '12 21 * * 3'
+    
+jobs:
+  codeQL:
+    name: Analyze
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: "python" # specify python here
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+
+
+  safety:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: |
+          python -m pip install pdm
+          pdm install    
+    - name: Run Safety Check
+      uses: pyupio/safety-ci@v1
+
+  bandit:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: pip install bandit
+    - name: Run Bandit
+      run: bandit -r .
