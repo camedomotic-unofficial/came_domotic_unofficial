@@ -35,7 +35,9 @@ jobs:
           python -m pip install pdm
           pdm install    
     - name: Run Safety Check
-      uses: pyupio/safety-ci@v1
+      uses: pyupio/safety-action@v1
+      with:
+        api-key: ${{ secrets.SAFETY_API_KEY }}
 
   bandit:
     runs-on: ubuntu-latest
