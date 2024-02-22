@@ -19,9 +19,7 @@ name: Build to TestPyPI and run unit tests
 
 on:
   push:
-    branches: [ main ]
   pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 permissions:
@@ -29,7 +27,6 @@ permissions:
 
 jobs:
   build_and_publish_testpypi:
-    if: github.event.pull_request.merged == true
     environment: testpypi
     runs-on: ubuntu-latest
     permissions:
