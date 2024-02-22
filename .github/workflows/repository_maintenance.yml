@@ -2,7 +2,7 @@ name: 'Repository maintenance scheduled tasks'
 
 on:
   schedule:
-    - cron: '33 7 * * *'
+    - cron: '33 7 * * 3'
   workflow_dispatch:
 
 permissions:

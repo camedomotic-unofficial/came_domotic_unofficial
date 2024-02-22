@@ -41,7 +41,7 @@ classifiers = [
     "Topic :: Home Automation",
     "Operating System :: OS Independent",
 ]
-dependencies = ["hypothesis", "pytest", "requests"]
+dependencies = ["requests"]
 
 [project.urls]
 Homepage = "https://github.com/fredericks1982/came_domotic_unofficial"
