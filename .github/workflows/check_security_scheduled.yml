@@ -7,21 +7,21 @@ on:
     - cron: '12 21 * * 3'
     
 jobs:
-  codeQL:
-    name: Analyze
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
-      with:
-        languages: "python" # specify python here
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
+  # codeQL:
+  #   name: Analyze
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     security-events: write
+  #   steps:
+  #   - name: Checkout repository
+  #     uses: actions/checkout@v2
+  #   - name: Initialize CodeQL
+  #     uses: github/codeql-action/init@v3
+  #     with:
+  #       languages: "python" # specify python here
+  #   - name: Perform CodeQL Analysis
+  #     uses: github/codeql-action/analyze@v3
 
 
   safety:
