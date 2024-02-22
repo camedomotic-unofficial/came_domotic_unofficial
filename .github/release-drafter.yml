@@ -5,28 +5,38 @@ include-paths:
 autolabeler:
   - label: 'chore'
     files:
-      - '*.md'
       - 'pyproject.toml'
     branch:
-      - '/docs{0,1}\/.+/'
       - '/actions{0,1}\/.+/'
-  - label: 'fix'
+      - '/tests{0,1}\/.+/'
+  - label: 'documentation'
+    files:
+      - '*.md'
+    branch:
+      - '/docs{0,1}\/.+/'
+  - label: 'bug'
     branch:
       - '/fix\/.+/'
+      - '/bug\/.+/'
     title:
       - '/fix/i'
-  - label: 'feature'
+      - '/bug/i'
+  - label: 'enhancement'
     branch:
-      - '/feature\/.+/'
+      - '/features{0,1}\/.+/'
+      - '/enhancements{0,1}\/.+/'
 categories:
   - title: 'Features'
     labels:
-      - 'feature'
+      - 'enhancement'
   - title: 'Bug Fixes'
     labels:
+      - 'bug'
       - 'fix'
   - title: 'Maintenance'
-    label: 'chore'
+    labels: 
+      - 'chore'
+      - 'documentation'
 # change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
 # change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
 # version-resolver:
