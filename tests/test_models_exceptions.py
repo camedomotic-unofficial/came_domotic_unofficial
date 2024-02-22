@@ -17,7 +17,7 @@ Unit tests for the CameDomoticError class and its subclasses.
 """
 
 import pytest
-from came_domotic_unofficial.models import (
+from came_domotic_unofficial.exceptions import (
     CameDomoticAuthError,
     CameDomoticBadAckError,
     CameDomoticError,
@@ -100,7 +100,7 @@ def test_came_domotic_bad_ack_error_without_reason():
     with pytest.raises(CameDomoticBadAckError) as exc_info:
         raise CameDomoticBadAckError(9)
 
-    assert str(exc_info.value) == "Bad ack code: 9"
+    assert str(exc_info.value) == "Bad ack code: 9 - Reason: N/A"
 
 
 def test_came_domotic_bad_ack_error_no_ack_or_wrong():
@@ -110,14 +110,14 @@ def test_came_domotic_bad_ack_error_no_ack_or_wrong():
     with pytest.raises(CameDomoticBadAckError) as exc_info:
         raise CameDomoticBadAckError()
 
-    assert str(exc_info.value) == "Bad ack code."
+    assert str(exc_info.value) == "Bad ack code: N/A - Reason: N/A"
 
     with pytest.raises(CameDomoticBadAckError) as exc_info:
         raise CameDomoticBadAckError("TEST")
 
-    assert str(exc_info.value) == "Bad ack code: TEST"
+    assert str(exc_info.value) == "Bad ack code: TEST - Reason: N/A"
 
     with pytest.raises(CameDomoticBadAckError) as exc_info:
-        raise CameDomoticBadAckError("TEST", 9)
+        raise CameDomoticBadAckError("TEST", -1)
 
-    assert str(exc_info.value) == "Bad ack code: TEST - Reason: 9"
+    assert str(exc_info.value) == "Bad ack code: TEST - Reason: -1"

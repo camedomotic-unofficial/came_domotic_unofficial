@@ -47,24 +47,30 @@ import json
 import logging
 from importlib.metadata import version, PackageNotFoundError
 import traceback
+from typing import Optional
+from typing import Dict, Any, Type
 import requests
 
-from came_domotic_unofficial.models import (
+from came_domotic_unofficial.exceptions import (
     CameDomoticBadAckError,
     CameDomoticServerNotFoundError,
     CameDomoticAuthError,
     CameDomoticRequestError,
+)
+from came_domotic_unofficial.models import (
     CameEntitySet,
     CameEntity,
-    _Class2SwitchCommand,
     EntityStatus,
     EntityType,
-    _EntityType2Class,
     Feature,
     FeaturesSet,
     Light,
     Opening,
     Scenario,
+)
+from came_domotic_unofficial.helpers import (
+    _Class2SwitchCommand,
+    _EntityType2Class,
 )
 
 
@@ -216,8 +222,8 @@ class CameETIDomoServer:
         self._serial_number = ""
 
         # Features and entities
-        self._features = set()  # List of available features
-        self._entities = set()  # List of items managed by the server
+        self._features = FeaturesSet()  # List of available features
+        self._entities = CameEntitySet()  # List of items managed by the server
 
         # endregion
 
@@ -333,7 +339,7 @@ class CameETIDomoServer:
 
         return self._features
 
-    def get_entities(self, entity_type: EntityType = None) -> CameEntitySet:
+    def get_entities(self, entity_type: Optional[EntityType] = None) -> CameEntitySet:
         """Returns the list of entities managed by the server."""
 
         if not self._entities or len(self._entities) == 0:
@@ -363,44 +369,42 @@ class CameETIDomoServer:
     @ensure_login
     def set_entity_status(
         self,
-        entity_type: type,
+        entity_type: Type[CameEntity],
         entity_id: int,
-        status: EntityStatus = None,
+        status: EntityStatus,
         *,
-        brightness=None,
+        brightness: Optional[int] = 100,
     ) -> bool:
         """
         Sets the status of an entity. Currently supported: ligts, openings and
         scenarios.
 
         Args:
-            entity_type (type): The type of the entity.
+            entity_type (Type[CameEntity]): The type of the entity.
             entity (Entity): The entity to set the status for.
             status (EntityStatus): The status to set.
 
         Keyword Args:
             brightness (int, optional): The brightness level. Defaults to None.
         """
-        # Validate input
-        if not isinstance(entity_type, type(CameEntity)):
-            raise TypeError("entity_type must be the type of a CameEntity")
 
-        if not isinstance(entity_id, int) or entity_id < 0:
-            raise ValueError("entity_id must be a positive integer")
-
-        if entity_type is Light or entity_type is Opening:
-            if status is None or not isinstance(status, EntityStatus):
-                raise TypeError("status must be an EntityStatus")
-            if (
-                brightness is not None
-                and not isinstance(brightness, int)
-                and 0 <= brightness <= 100
-            ):
-                raise TypeError("brightness must be between 0 and 100")
-
-        if entity_type not in {Light, Opening, Scenario}:
+        if entity_type not in [Light, Opening, Scenario]:
             _LOGGER.warning("Entity type '%s' not supported. Skipping.", entity_type)
             return False
+
+        if entity_type == Light:
+            if brightness is None:
+                brightness = (
+                    Light._DEFAULT_BRIGHTNESS  # pylint: disable=protected-access
+                )
+            elif brightness < 0 or brightness > 100:
+                _LOGGER.warning(
+                    "Brightness must be between 0 and 100 (provided: %s). "
+                    "Setting it to %s.",
+                    brightness,
+                    max(0, min(100, brightness)),
+                )
+                brightness = max(0, min(100, brightness))
 
         # LIGHT - Input payload example
         # {
@@ -445,7 +449,7 @@ class CameETIDomoServer:
 
         # Create the request
         self._cseq += 1
-        request_data = {
+        request_data: Dict[str, Any] = {
             "sl_appl_msg": {
                 "client": self._session_id,
                 "cmd_name": _Class2SwitchCommand[entity_type],
@@ -456,13 +460,10 @@ class CameETIDomoServer:
             "sl_cmd": "sl_data_req",
         }
 
-        if entity_type in {Light, Opening}:
-            request_data["sl_appl_msg"]["act_id"] = entity_id
-            request_data["sl_appl_msg"]["wanted_status"] = status.value
-            if brightness is not None:
-                request_data["sl_appl_msg"]["perc"] = brightness
-        elif entity_type == Scenario:
-            request_data["sl_appl_msg"]["id"] = entity_id
+        request_data["sl_appl_msg"]["id"] = entity_id
+        request_data["sl_appl_msg"]["act_id"] = entity_id
+        request_data["sl_appl_msg"]["wanted_status"] = status.value
+        request_data["sl_appl_msg"]["perc"] = brightness
 
         try:
             # Send the post request with the login parameters
@@ -486,7 +487,8 @@ class CameETIDomoServer:
                 return False
         except CameDomoticRequestError as e:
             _LOGGER.error(
-                "Unexpected error trying to update the status of the entity. Error: %s\n%s",  # noqa: E501 # pylint: disable=line-too-long
+                "Unexpected error trying to update the status of the entity. "
+                "Error: %s\n%s",
                 e,
                 traceback.format_exc(),
             )
@@ -494,7 +496,8 @@ class CameETIDomoServer:
             return False
         except Exception as e:  # pylint: disable=broad-exception-caught
             _LOGGER.error(
-                "Unexpected error trying to update the status of the entity. Error: %s\n%s",  # noqa: E501 # pylint: disable=line-too-long
+                "Unexpected error trying to update the status of the entity. "
+                "Error: %s\n%s",
                 e,
                 traceback.format_exc(),
             )
@@ -619,7 +622,7 @@ class CameETIDomoServer:
                 # before the actual expiration
                 self._session_expiration_timestamp = datetime.now(
                     timezone.utc
-                ) + timedelta(seconds=(response["sl_keep_alive_timeout_sec"] - 30))
+                ) + timedelta(seconds=response["sl_keep_alive_timeout_sec"] - 30)
                 self._cseq = 0  # Reset the cseq sequence
 
                 _LOGGER.debug(
@@ -689,7 +692,7 @@ class CameETIDomoServer:
             _LOGGER.error("Unexpected error trying to logoff. Error: %s", e)
             return False
 
-    def _send_command(self, data: dict) -> requests.Response:
+    def _send_command(self, data: dict):
         try:
             response = self._http_session.post(
                 self._host_url,
@@ -795,7 +798,7 @@ status code: {response.status_code}"
                 self._features = FeaturesSet.from_json(resp["list"])
 
                 _LOGGER.debug("Features retrieved: %s", self._features)
-                return True
+                return
             else:
                 _LOGGER.error(
                     "Features retrieval failed. SL_DATA_ACK_REASON: %s",
@@ -837,9 +840,7 @@ status code: {response.status_code}"
         self._entities = entities
 
     @ensure_login
-    def _fetch_entities_list_by_feature(
-        self, feature: Feature
-    ) -> CameEntitySet:  # noqa: E501
+    def _fetch_entities_list_by_feature(self, feature: Feature) -> CameEntitySet:
 
         try:
             entity_type = EntityType[feature.name.upper()]
@@ -891,10 +892,11 @@ status code: {response.status_code}"
                 # }
 
                 if resp["sl_data_ack_reason"] == 0:
+                    # The following line is anannotation for type checkers (i.e. mypy)
+                    provided_type: Type[CameEntity] = _EntityType2Class[entity_type]
                     # Create the entities
                     entities = CameEntitySet(
-                        _EntityType2Class[entity_type].from_json(item)
-                        for item in resp["array"]
+                        provided_type.from_json(item) for item in resp["array"]
                     )
                     _LOGGER.debug("Entities retrieved: %s", entities)
                     return entities

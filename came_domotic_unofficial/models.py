@@ -18,52 +18,7 @@ CAME Domotic entities.
 
 from datetime import datetime
 from enum import Enum
-
-
-# region Exceptions
-class CameDomoticError(Exception):
-    """Base exception class for the Came Domotic package."""
-
-
-class CameDomoticServerNotFoundError(CameDomoticError):
-    """Raised when the specified host is not available"""
-
-
-# Authentication exception class
-class CameDomoticAuthError(CameDomoticError):
-    """Raised when there is an authentication error with the remote server."""
-
-
-# Server exception class
-class CameDomoticRemoteServerError(CameDomoticError):
-    """Raised when there is an error related to the Came Domotic server."""
-
-
-class CameDomoticRequestError(CameDomoticError):
-    """Raised when the server doesn't accept a user request."""
-
-
-class CameDomoticBadAckError(CameDomoticRequestError):
-    """Raised when the server returns a bad ack code/reason.
-
-    :param ack_code: the ack code returned by the server.
-    :param reason: the reason returned by the server."""
-
-    def __init__(self, ack_code=None, reason: str = None):
-        """Constructor for the CameDomoticBadAckError class.
-
-        :param ack_code: the ack code returned by the server.
-        :param reason: the reason returned by the server (optional).
-        """
-        if ack_code is None:
-            super().__init__("Bad ack code.")
-        elif reason and len(str(reason)) > 0:
-            super().__init__(f"Bad ack code: {str(ack_code)} - Reason: {str(reason)}")
-        else:
-            super().__init__(f"Bad ack code: {str(ack_code)}")
-
-
-# endregion
+from typing import Optional
 
 # region Enums
 
@@ -181,7 +136,7 @@ class CameEntity:
     def __init__(
         self,
         entity_id: int,
-        name: str = _DEFAULT_NAME,
+        name: Optional[str] = _DEFAULT_NAME,
         *,
         status: EntityStatus = _DEFAULT_STATUS,
     ):
@@ -261,6 +216,44 @@ class CameEntity:
 
     def __hash__(self) -> int:
         return hash((type(self), self.__repr__()))
+
+    @staticmethod
+    def from_json(json_data: dict):
+        """Creates a CameEntity object from a JSON dictionary.
+
+        Example of JSON input:
+        {
+            "act_id": 1,
+            "name": "My entity",
+            "status": 0,
+        }
+
+        All the properties except "act_id" are optional, and they are set
+        to their default values (name="Unknown", status=UNKNOWN).
+
+        Any other JSON property (like floor_ind, room_ind) is ignored.
+
+        :param json_data: the JSON dictionary representing the light.
+
+        :raises KeyError: if the JSON dictionary doesn't contain the "act_id".
+        :raises TypeError: if some of the values are not valid.
+        """
+
+        return CameEntity(
+            json_data["act_id"],
+            (
+                json_data["name"]
+                if "name" in json_data and isinstance(json_data["name"], str)
+                else CameEntity._DEFAULT_NAME
+            ),
+            status=(
+                EntityStatus(json_data["status"])
+                if "status" in json_data
+                and json_data["status"]
+                in EntityStatus._value2member_map_  # pylint: disable=protected-access
+                else CameEntity._DEFAULT_STATUS
+            ),
+        )
 
 
 class CameEntitySet(set):
@@ -395,7 +388,7 @@ class Light(CameEntity):
     def __init__(
         self,
         entity_id: int,
-        name: str = None,
+        name: Optional[str] = CameEntity._DEFAULT_NAME,
         *,
         status: EntityStatus = _DEFAULT_STATUS,
         light_type: LightType = _DEFAULT_LIGHT_TYPE,
@@ -487,7 +480,7 @@ class Light(CameEntity):
         }
 
         All the properties except "act_id" are optional, and they are set
-        to their default values (name="Unknown", status=OFF, type=ON_OFF,
+        to their default values (name="Unknown", status=UNKNOWN, type=ON_OFF,
         perc=100).
 
         Any other JSON property (like floor_ind, room_ind) is ignored.
@@ -509,14 +502,14 @@ class Light(CameEntity):
                 EntityStatus(json_data["status"])
                 if "status" in json_data
                 and json_data["status"]
-                in EntityStatus._value2member_map_  # pylint: disable=protected-access # noqa: E501
+                in EntityStatus._value2member_map_  # pylint: disable=protected-access
                 else Light._DEFAULT_STATUS
             ),
             light_type=(
                 LightType(json_data["type"])
                 if "type" in json_data
                 and json_data["type"]
-                in LightType._value2member_map_  # pylint: disable=protected-access # noqa: E501
+                in LightType._value2member_map_  # pylint: disable=protected-access
                 else Light._DEFAULT_LIGHT_TYPE
             ),
             brightness=(
@@ -549,12 +542,12 @@ class Opening(CameEntity):
     def __init__(
         self,
         entity_id: int,
-        name: str = None,
+        name: Optional[str] = CameEntity._DEFAULT_NAME,
         *,
         status: EntityStatus = _DEFAULT_STATUS,
-        close_entity_id: int = None,
+        close_entity_id: Optional[int] = None,
         opening_type: OpeningType = _DEFAULT_OPENING_TYPE,
-        partial_openings: list = None,
+        partial_openings: Optional[list] = None,
     ):
         """
         Constructor for the Came Opening class.
@@ -646,7 +639,7 @@ class Opening(CameEntity):
 
         :param json_data: the JSON dictionary representing the opening.
 
-        :raises KeyError: if the JSON dictionary doesn't contain the "open_act_id". # noqa: E501
+        :raises KeyError: if the JSON dictionary doesn't contain the "open_act_id".
         """
 
         return Opening(
@@ -666,14 +659,14 @@ class Opening(CameEntity):
                 EntityStatus(json_data["status"])
                 if "status" in json_data
                 and json_data["status"]
-                in EntityStatus._value2member_map_  # pylint: disable=protected-access # noqa: E501
+                in EntityStatus._value2member_map_  # pylint: disable=protected-access
                 else Opening._DEFAULT_STATUS
             ),
             opening_type=(
                 OpeningType(json_data["type"])
                 if "type" in json_data
                 and json_data["type"]
-                in OpeningType._value2member_map_  # pylint: disable=protected-access # noqa: E501
+                in OpeningType._value2member_map_  # pylint: disable=protected-access
                 else Opening._DEFAULT_OPENING_TYPE
             ),
             partial_openings=(
@@ -710,7 +703,7 @@ class DigitalInput(CameEntity):
     def __init__(
         self,
         entity_id: int,
-        name: str = None,
+        name: Optional[str] = CameEntity._DEFAULT_NAME,
         *,
         button_type: DigitalInputType = _DEFAULT_BUTTON_TYPE,
         address: int = _DEFAULT_ADDRESS,
@@ -784,7 +777,7 @@ class DigitalInput(CameEntity):
         return (
             f'{type(self).__name__} #{self.id}: "{self.name}" - '
             f"Type: {self.button_type.name} - Address: {self.address} - "
-            f'Ack code: {self.ack_code} - Radio node ID: "{self.radio_node_id}" - '  # noqa: E50
+            f'Ack code: {self.ack_code} - Radio node ID: "{self.radio_node_id}" - '
             f"RF radio link quality: {self.rf_radio_link_quality} - "
             f"Last pressed: {self.last_pressed}"
         )
@@ -876,7 +869,7 @@ class Scenario(CameEntity):
     :property id: the scenario ID
     :property name: the scenario name. Defaults to "Unknown" if None or empty.
     :property status: the scenario status (OFF, ON). Defaults to OFF.
-    :property scenario_status: the scenario status (NOT_APPLIED, ONGOING, APPLIED). Defaults to NOT_APPLIED  # noqa: E501 # pylint: disable=line-too-long
+    :property scenario_status: the scenario status (NOT_APPLIED, ONGOING, APPLIED). Defaults to NOT_APPLIED
     :property icon: the scenario icon type. Defaults to UNKNOWN.
     :property is_user_defined: the scenario is user defined. Defaults to False.
 
@@ -890,7 +883,7 @@ class Scenario(CameEntity):
     def __init__(
         self,
         entity_id: int,
-        name: str = None,
+        name: Optional[str] = CameEntity._DEFAULT_NAME,
         *,
         status: EntityStatus = _DEFAULT_STATUS,
         scenario_status: ScenarioStatus = _DEFAULT_SCENARIO_STATUS,
@@ -961,7 +954,8 @@ class Scenario(CameEntity):
     def __str__(self) -> str:
         return (
             f'{type(self).__name__} #{self.id}: "{self.name}" - '
-            f"Status: {self.status.name} - Scenario status: {self.scenario_status.name} - "  # noqa: E501 # pylint: disable=line-too-long
+            f"Status: {self.status.name} - "
+            f"Scenario status: {self.scenario_status.name} - "
             f"Icon: {self.icon.name} - User defined: {self.is_user_defined}"
         )
 
@@ -1026,31 +1020,5 @@ class Scenario(CameEntity):
             ),
         )
 
-
-# endregion
-
-# region Mappers
-
-_EntityType2Class = {
-    EntityType.FEATURES: Feature,
-    EntityType.LIGHTS: Light,
-    EntityType.OPENINGS: Opening,
-    EntityType.DIGITALIN: DigitalInput,
-    EntityType.SCENARIOS: Scenario,
-    # EntityType.UPDATE:
-    # EntityType.RELAYS:
-    # EntityType.CAMERAS:
-    # EntityType.TIMERS:
-    # EntityType.THERMOREGULATION:
-    # EntityType.ANALOGIN:
-    # EntityType.USERS:
-    # EntityType.MAPS:
-}
-
-_Class2SwitchCommand = {
-    Light: "light_switch_req",
-    Opening: "opening_move_req",
-    Scenario: "scenario_activation_req",
-}
 
 # endregion
