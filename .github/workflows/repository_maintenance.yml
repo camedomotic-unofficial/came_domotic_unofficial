@@ -17,7 +17,8 @@ jobs:
   lock-inactive-threads:
     runs-on: ubuntu-latest
     steps:
-      - uses: dessant/lock-threads@v5
+      - name: Lock inactive threads
+        uses: dessant/lock-threads@v5
         with:
             issue-inactive-days: '90'
             pr-inactive-days: '90'
@@ -36,3 +37,18 @@ jobs:
                 Please unlock this thread if you have further questions or comments.
             log-output: true
             
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 180 days stale policy
+        uses: actions/stale@v7
+        with:
+          days-before-stale: 90
+          stale-issue-message: >
+            This item has been automatically marked as stale because it has not had
+            recent activity. It will be closed if no further activity occurs. Thank you
+            for your contributions.
+          stale-pr-message: >
+            There hasn't been any activity on this item recently. This pull request has 
+            been automatically marked as stale because of that and will be closed if no 
+            further activity occurs. Thank you for contributions.
