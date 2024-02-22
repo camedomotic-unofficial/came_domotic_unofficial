@@ -102,7 +102,7 @@ jobs:
           pip install -e . 
       - name: Test with pytest
         run: |
-          pytest --cov came_domotic_unofficial --timeout 10 --pyargs came_domotic_unofficial-fredericks1982
+          pytest --timeout 10 --pyargs came_domotic_unofficial-fredericks1982  --cov came_domotic_unofficial
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         env:
