@@ -124,6 +124,36 @@ def test_came_entity_set_not_valid_status():
     name=text(min_size=1),
     status=sampled_from(EntityStatus),
 )
+def test_came_entity_str(entity_id, name, status: EntityStatus):
+    """
+    Test the string representation of the CameEntity class.
+    """
+    entity = CameEntity(entity_id, name, status=status)
+
+    assert str(entity) == (
+        f"CameEntity #{entity_id}: {name} - Status: " f"{status.name}"
+    )
+
+
+@given(
+    entity_id=integers(),
+    name=text(min_size=1),
+    status=sampled_from(EntityStatus),
+)
+def test_came_entity_repr(entity_id, name, status: EntityStatus):
+    """
+    Test the string representation of the CameEntity class.
+    """
+    entity = CameEntity(entity_id, name, status=status)
+
+    assert repr(entity) == f'CameEntity({entity_id},"{name}",status={status})'
+
+
+@given(
+    entity_id=integers(),
+    name=text(min_size=1),
+    status=sampled_from(EntityStatus),
+)
 def test_came_entity_eq(entity_id, name, status):
     """
     Test the equality operator for the CameEntity class.
@@ -190,6 +220,88 @@ def test_came_entity_hash(entity_id, name, status):
     assert hash(came_entity1) == hash(came_entity2)
     assert hash(came_entity1) != hash(came_entity3)
     assert hash(came_entity1) != hash(other_type)
+
+
+@given(
+    entity_id=integers(),
+    name=text(min_size=1),
+    status=sampled_from(EntityStatus),
+)
+def test_came_entity_from_json(entity_id, name, status):
+    """
+    Test the from_json method of the CameEntity class.
+    """
+    json_data = {
+        "act_id": entity_id,
+        "name": name,
+        "status": status.value,
+    }
+    came_entity = CameEntity.from_json(json_data)
+
+    assert came_entity.id == entity_id
+    assert came_entity.name == name
+    assert came_entity.status == status
+
+
+@given(
+    entity_id=integers(),
+)
+def test_came_entity_from_json_defaults(entity_id):
+    """
+    Test the from_json method of the CameEntity class.
+    """
+    json_data = {
+        "act_id": entity_id,
+    }
+    came_entity = CameEntity.from_json(json_data)
+
+    assert came_entity == CameEntity(entity_id)
+
+
+@given(
+    name=text(min_size=1),
+    status=sampled_from(EntityStatus),
+)
+def test_came_entity_from_json_missing_required(name, status):
+    """
+    Test the from_json method of the CameEntity class.
+    """
+    json_data = {
+        "name": name,
+        "status": status.value,
+    }
+
+    with pytest.raises(KeyError):
+        CameEntity.from_json(json_data)
+
+
+def test_came_entity_from_json_unexpected_keys():
+    """
+    Test the from_json method of the CameEntity class.
+    """
+    json_data = {
+        "act_id": 1,
+        "name": "Test",
+        "status": EntityStatus.UNKNOWN.value,
+        "unknown_key": "Value",
+    }
+    came_entity = CameEntity.from_json(json_data)
+
+    assert came_entity == CameEntity(1, "Test", status=EntityStatus.UNKNOWN)
+
+
+def test_came_entity_from_json_unexpected_values():
+    """
+    Test the from_json method of the CameEntity class.
+    """
+    json_data = {
+        "act_id": 1,
+        "name": -1000,
+        "status": "invalid",
+    }
+    came_entity = CameEntity.from_json(json_data)
+
+    assert came_entity == CameEntity(1)
 
 
 # endregion

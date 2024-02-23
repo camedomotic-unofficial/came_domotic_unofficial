@@ -205,7 +205,7 @@ class CameEntity:
 
     def __repr__(self) -> str:
         return (
-            f'{type(self).__name__}({self.id},"{self.name}",' f"status={self.status})"
+            f'{type(self).__name__}({self.id},"{self.name}",status={self.status})'
         )
 
     def __eq__(self, other: object) -> bool:
@@ -236,7 +236,6 @@ class CameEntity:
         :param json_data: the JSON dictionary representing the light.
 
         :raises KeyError: if the JSON dictionary doesn't contain the "act_id".
-        :raises TypeError: if some of the values are not valid.
         """
 
         return CameEntity(
