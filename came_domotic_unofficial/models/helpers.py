@@ -12,20 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 """
 CAME Domotic helpers (enums, mappers, etc.)
 """
 
 from typing import Type
-from came_domotic_unofficial.models import (
-    CameEntity,
-    Feature,
-    Light,
-    Opening,
-    DigitalInput,
-    Scenario,
-    EntityType,
-)
+from .came_entity import CameEntity
+from .feature import Feature
+from .light import Light
+from .opening import Opening
+from .digital_input import DigitalInput
+from .scenario import Scenario
+from .enums import EntityType
 
 
 # region Mappers

@@ -51,28 +51,31 @@ from typing import Optional
 from typing import Dict, Any, Type
 import requests
 
-from came_domotic_unofficial.exceptions import (
+from .models.helpers import (
+    _EntityType2Class,
+    _Class2SwitchCommand,
+)
+from .models.exceptions import (
     CameDomoticBadAckError,
     CameDomoticServerNotFoundError,
     CameDomoticAuthError,
     CameDomoticRequestError,
 )
-from came_domotic_unofficial.models import (
-    CameEntitySet,
-    CameEntity,
+from .models.enums import (
     EntityStatus,
     EntityType,
+)
+from .models.came_entity import (
+    CameEntitySet,
+    CameEntity,
+)
+from .models.feature import (
     Feature,
     FeaturesSet,
-    Light,
-    Opening,
-    Scenario,
 )
-from came_domotic_unofficial.helpers import (
-    _Class2SwitchCommand,
-    _EntityType2Class,
-)
-
+from .models.light import Light
+from .models.opening import Opening
+from .models.scenario import Scenario
 
 # region Intro (version, logger)
 
@@ -103,7 +106,8 @@ def get_logger():
     """
     return _LOGGER
 
-    # endregion
+
+# endregion
 
 
 def ensure_login(func):

@@ -52,7 +52,8 @@ Issues = "https://github.com/fredericks1982/came_domotic_unofficial/issues"
 version_file = "came_domotic_unofficial/_version.py"
 
 [tool.pytest.ini_options]
-addopts = "--timeout=10 --cov=came_domotic_unofficial --cov-report=term-missing"
+addopts = "--timeout=10"
+# addopts = "--timeout=10 --cov=came_domotic_unofficial --cov-report=term-missing --cov-report=html"
 
 [tool.coverage.run]
 omit = [

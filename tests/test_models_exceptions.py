@@ -17,7 +17,7 @@ Unit tests for the CameDomoticError class and its subclasses.
 """
 
 import pytest
-from came_domotic_unofficial.exceptions import (
+from came_domotic_unofficial.models import (
     CameDomoticAuthError,
     CameDomoticBadAckError,
     CameDomoticError,
