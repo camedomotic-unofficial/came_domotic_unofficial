@@ -1,5 +1,5 @@
-# name-template: 'v$RESOLVED_VERSION 🌈'
-# tag-template: 'v$RESOLVED_VERSION'
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
 include-paths:
   - "came_domotic_unofficial/"
 autolabeler:
@@ -38,19 +38,19 @@ categories:
     labels: 
       - 'chore'
       - 'documentation'
-# change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
-# change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
-# version-resolver:
-#   major:
-#     labels:
-#       - 'major'
-#   minor:
-#     labels:
-#       - 'minor'
-#   patch:
-#     labels:
-#       - 'patch'
-#   default: patch
+change-template: '- $TITLE @$AUTHOR'
+change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
+version-resolver:
+  major:
+    labels:
+      - 'major'
+  minor:
+    labels:
+      - 'minor'
+  patch:
+    labels:
+      - 'patch'
+  default: patch
 template: |
   ## Changelog
 
