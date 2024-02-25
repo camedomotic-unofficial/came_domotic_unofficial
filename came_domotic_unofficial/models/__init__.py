@@ -34,7 +34,7 @@ from .enums import (
     ScenarioIcon,
 )
 from .came_entity import CameEntity, CameEntitySet
-from .feature import Feature, FeaturesSet
+from .feature import Feature, FeatureSet
 from .light import Light
 from .opening import Opening
 from .scenario import Scenario

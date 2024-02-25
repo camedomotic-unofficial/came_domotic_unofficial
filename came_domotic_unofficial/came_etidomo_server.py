@@ -67,7 +67,7 @@ from .models.came_entity import (
 )
 from .models.feature import (
     Feature,
-    FeaturesSet,
+    FeatureSet,
 )
 from .models.light import Light
 from .models.opening import Opening
@@ -197,7 +197,7 @@ class CameETIDomoServer:
         self._serial_number = ""
 
         # Features and entities
-        self._features = FeaturesSet()  # List of available features
+        self._features = FeatureSet()  # List of available features
         self._entities = CameEntitySet()  # List of items managed by the server
 
         # endregion
@@ -205,7 +205,7 @@ class CameETIDomoServer:
         # region Check host availability
 
         try:
-            response = requests.get(
+            response = self._http_session.get(
                 self._host_url,
                 headers=self._HTTP_HEADERS,
                 timeout=self._HTTP_TIMEOUT,
@@ -270,59 +270,70 @@ class CameETIDomoServer:
     def keycode(self) -> str:
         """Keycode (unique ID) of the CAME Eti/Domo server."""
         if self._keycode == "":
-            self._fetch_features_list()
-
+            self.get_features()
         return self._keycode
 
     @property
     def software_version(self) -> str:
         """Software version of the CAME Eti/Domo server."""
         if self._software_version == "":
-            self._fetch_features_list()
+            self.get_features()
         return self._software_version
 
     @property
     def server_type(self) -> str:
         """Type of CAME Eti/Domo server."""
         if self._type == "":
-            self._fetch_features_list()
+            self.get_features()
         return self._type
 
     @property
     def board(self) -> str:
         """Board type of the CAME Eti/Domo server."""
         if self._board == "":
-            self._fetch_features_list()
+            self.get_features()
         return self._board
 
     @property
     def serial_number(self) -> str:
         """Serial number of the CAME Eti/Domo server."""
         if self._serial_number == "":
-            self._fetch_features_list()
+            self.get_features()
         return self._serial_number
 
     # endregion
 
     # region Public methods
 
-    def get_features(self) -> FeaturesSet:
+    def get_features(self) -> FeatureSet:
         """Returns the list of features supported by the server."""
         if not self._features:
             # If features are not cached, fetch them from the API
-            self._fetch_features_list()
+            resp = self._fetch_features_list()
+            self._keycode = resp["keycode"]
+            self._software_version = resp["swver"]
+            self._type = resp["type"]
+            self._board = resp["board"]
+            self._serial_number = resp["serial"]
+            self._features = FeatureSet.from_json(resp["list"])
 
         return self._features
 
     def get_entities(self, entity_type: Optional[EntityType] = None) -> CameEntitySet:
         """Returns the list of entities managed by the server."""
 
-        if not self._entities or len(self._entities) == 0:
-            # If entities are not cached, fetch them from the API
-            self._fetch_entities_list()
+        # Input validation
+        if entity_type is not None and not isinstance(entity_type, EntityType):
+            raise TypeError("entity_type must be an EntityType")
+
+        if not self._entities:
+            entities = self._fetch_entities_list()
+            self._entities = entities
 
         # Return a subset of entities if entity_type is specified
-        if entity_type is not None:
+        if entity_type is None:
+            return self._entities
+        else:
             # TODO Add new mappings once new entity classes are implemented
             if entity_type not in _EntityType2Class:
                 raise ValueError(
@@ -330,7 +341,6 @@ class CameETIDomoServer:
                     f"{_EntityType2Class.keys()}"
                 )
 
-            # requested_type = type(_EntityType2Class[entity_type])
             return CameEntitySet(
                 {
                     item
@@ -338,8 +348,6 @@ class CameETIDomoServer:
                     if isinstance(item, _EntityType2Class[entity_type])
                 }
             )
-        else:
-            return self._entities
 
     @ensure_login
     def set_entity_status(
@@ -362,6 +370,15 @@ class CameETIDomoServer:
         Keyword Args:
             brightness (int, optional): The brightness level. Defaults to None.
         """
+        # Input validation
+        if not issubclass(entity_type, CameEntity):
+            raise TypeError("entity_type must be a subclass of CameEntity")
+
+        if not isinstance(entity_id, int):
+            raise TypeError("entity_id must be an integer")
+
+        if not isinstance(status, EntityStatus):
+            raise TypeError("status must be an EntityStatus")
 
         if entity_type not in [Light, Opening, Scenario]:
             _LOGGER.warning("Entity type '%s' not supported. Skipping.", entity_type)
@@ -372,6 +389,8 @@ class CameETIDomoServer:
                 brightness = (
                     Light._DEFAULT_BRIGHTNESS  # pylint: disable=protected-access
                 )
+            elif not isinstance(brightness, int):
+                raise TypeError("brightness must be an integer beween 0 and 100")
             elif brightness < 0 or brightness > 100:
                 _LOGGER.warning(
                     "Brightness must be between 0 and 100 (provided: %s). "
@@ -664,7 +683,7 @@ class CameETIDomoServer:
             _LOGGER.error("Error trying to logoff. Error: %s", e)
             return False
         except Exception as e:  # pylint: disable=broad-exception-caught
-            _LOGGER.error("Unexpected error trying to logoff. Error: %s", e)
+            _LOGGER.error("Unexpected error trying to logoff.", exc_info=True)
             return False
 
     def _send_command(self, data: dict):
@@ -712,7 +731,7 @@ status code: {response.status_code}"
     #     asyncio.create_task(self._keep_alive())
 
     @ensure_login
-    def _fetch_features_list(self) -> None:
+    def _fetch_features_list(self) -> dict:
 
         # Input data example
         # {
@@ -765,15 +784,10 @@ status code: {response.status_code}"
 
             # Check if the user is authorized and store the session info
             if resp["sl_data_ack_reason"] == 0:
-                self._keycode = resp["keycode"]
-                self._software_version = resp["swver"]
-                self._type = resp["type"]
-                self._board = resp["board"]
-                self._serial_number = resp["serial"]
-                self._features = FeaturesSet.from_json(resp["list"])
-
                 _LOGGER.debug("Features retrieved: %s", self._features)
-                return
+
+                return resp
+
             else:
                 _LOGGER.error(
                     "Features retrieval failed. SL_DATA_ACK_REASON: %s",
@@ -802,17 +816,17 @@ status code: {response.status_code}"
                 "Unexpected error trying to get the features list."
             ) from e
 
-    def _fetch_entities_list(self) -> None:
+    def _fetch_entities_list(self) -> CameEntitySet:
         # Ensure that the features have been retrieved
         if not self._features:
-            self._fetch_features_list()
+            self.get_features()
 
         # For each feature, fetch the entities
         entities = CameEntitySet()
         for feature in self._features:
             entities.update(self._fetch_entities_list_by_feature(feature))
 
-        self._entities = entities
+        return entities
 
     @ensure_login
     def _fetch_entities_list_by_feature(self, feature: Feature) -> CameEntitySet:

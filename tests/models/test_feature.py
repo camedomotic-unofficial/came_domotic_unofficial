@@ -23,7 +23,7 @@ from came_domotic_unofficial.models import (
     CameEntitySet,
     CameEntity,
     Feature,
-    FeaturesSet,
+    FeatureSet,
     EntityStatus,
 )
 
@@ -134,7 +134,7 @@ def test_featureset_initialization():
     """
     Test the initialization of the CameEntitiesSet class.
     """
-    feature_set = FeaturesSet()
+    feature_set = FeatureSet()
 
     assert isinstance(feature_set, CameEntitySet)
     assert len(feature_set) == 0
@@ -146,7 +146,7 @@ def test_featureset_initialization_with_items():
     """
     entity1 = Feature("Test 1")
     entity2 = Feature("Test 2")
-    feature_set = FeaturesSet([entity1, entity2])
+    feature_set = FeatureSet([entity1, entity2])
 
     assert entity1 in feature_set
     assert entity2 in feature_set
@@ -172,7 +172,7 @@ def test_featureset_add_valid_item():
     """
     Test if a valid item can be added to the CameEntitiesSet.
     """
-    feature_set = FeaturesSet()
+    feature_set = FeatureSet()
     entity = Feature("Test")
     feature_set.add(entity)
 
@@ -183,7 +183,7 @@ def test_featureset_add_invalid_item():
     """
     Test if an invalid item cannot be added to the CameEntitiesSet.
     """
-    feature_set = FeaturesSet()
+    feature_set = FeatureSet()
 
     with pytest.raises(TypeError) as exc_info:
         feature_set.add("Invalid Item")
@@ -195,7 +195,7 @@ def test_featureset_add_duplicate_item():
     """
     Test if a duplicate item can be added to the CameEntitiesSet.
     """
-    feature_set = FeaturesSet()
+    feature_set = FeatureSet()
     entity = Feature("Test")
     feature_set.add(entity)
     feature_set.add(entity)
@@ -206,8 +206,8 @@ def test_featureset_add_duplicate_item():
 @given(features_list=lists(elements=text(min_size=1), min_size=0))
 def test_featureset_from_json(features_list):
     """Test the from_json function with valid input."""
-    features_set = FeaturesSet.from_json(features_list)
-    assert isinstance(features_set, FeaturesSet)
+    features_set = FeatureSet.from_json(features_list)
+    assert isinstance(features_set, FeatureSet)
     assert all(isinstance(feature, Feature) for feature in features_set)
 
     assert set([feature.name for feature in features_set]) == set(
@@ -218,7 +218,7 @@ def test_featureset_from_json(features_list):
 def test_featureset_from_json_invalid_input_not_list():
     """Test the from_json function with invalid input: not a list."""
     with pytest.raises(TypeError):
-        FeaturesSet.from_json("not a list")
+        FeatureSet.from_json("not a list")
 
 
 @given(features_list=lists(elements=integers(), min_size=1))
@@ -227,7 +227,7 @@ def test_featureset_from_json_invalid_input_not_strings(features_list):
     Test the from_json function with invalid input: not a list of strings.
     """
     with pytest.raises(ValueError):
-        FeaturesSet.from_json(features_list)
+        FeatureSet.from_json(features_list)
 
 
 # endregion

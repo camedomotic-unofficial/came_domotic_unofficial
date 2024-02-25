@@ -68,7 +68,7 @@ class Feature(CameEntity):
     #     return hash((type(self), self.name))
 
 
-class FeaturesSet(CameEntitySet):
+class FeatureSet(CameEntitySet):
     """Represents a set of features managed by a CAME ETI/Domo server.
 
     :method add: adds a Feature object to the set, validating its type.
@@ -102,4 +102,4 @@ class FeaturesSet(CameEntitySet):
         if not all(isinstance(item, str) for item in features_list):
             raise ValueError("All elements in the list should be strings.")
 
-        return FeaturesSet([Feature(feature) for feature in features_list])
+        return FeatureSet([Feature(feature) for feature in features_list])
