@@ -178,3 +178,4 @@ cython_debug/
 .vscode/
 *.bak
 _version.py
+*.nogit*
