@@ -17,6 +17,23 @@
 These responses are used to test the CAME Domotic server client.
 """
 
+# pylint: disable=import-error
+# pylint: disable=no-name-in-module
+
+from came_domotic_unofficial.models import (
+    CameEntitySet,
+    Light,
+    EntityStatus,
+    LightType,
+    Opening,
+    OpeningType,
+    DigitalInput,
+    DigitalInputType,
+    Scenario,
+    ScenarioStatus,
+    ScenarioIcon,
+)
+
 SL_REGISTRATION_ACK = {
     "sl_cmd": "sl_registration_ack",
     "sl_client_id": "my_session_id",
@@ -459,3 +476,190 @@ GENERIC_REPLY = {
     "cmd_name": "generic_reply",
     "sl_data_ack_reason": 0,
 }
+
+Command2MockedResponse = {
+    "digitalin_list_req": DIGITALIN_LIST_RESP,
+    "energy_stat_req": ENERGY_STAT_RESP,
+    "feature_list_req": FEATURE_LIST_RESP,
+    # "generic_reply": GENERIC_REPLY,
+    "light_list_req": LIGHT_LIST_RESP,
+    "loadsctrl_meter_list_req": LOADSCTRL_METER_LIST_RESP,
+    "meters_list_req": METERS_LIST_RESP,
+    "openings_list_req": OPENINGS_LIST_RESP,
+    "scenarios_list_req": SCENARIOS_LIST_RESP,
+    "sl_keep_alive_req": SL_KEEP_ALIVE_ACK,
+    "sl_logout_req": SL_LOGOUT_ACK,
+    "sl_registration_req": SL_REGISTRATION_ACK,
+    "status_update_req": STATUS_UPDATE_RESP,
+    "terminals_groups_list_req": TERMINALS_GROUPS_LIST_RESP,
+    "thermo_list_req": THERMO_LIST_RESP,
+}
+
+
+MockedEntities = CameEntitySet(
+    {
+        Light(
+            1,
+            "light_ChQQs",
+            status=EntityStatus.ON_OPEN_TRIGGERED,
+            light_type=LightType.ON_OFF,
+            brightness=100,
+        ),
+        Light(
+            2,
+            "light_vdAEA",
+            status=EntityStatus.ON_OPEN_TRIGGERED,
+            light_type=LightType.ON_OFF,
+            brightness=100,
+        ),
+        Light(
+            3,
+            "light_onbFB",
+            status=EntityStatus.OFF_STOPPED,
+            light_type=LightType.ON_OFF,
+            brightness=100,
+        ),
+        Light(
+            4,
+            "light_xoOyy",
+            status=EntityStatus.OFF_STOPPED,
+            light_type=LightType.DIMMABLE,
+            brightness=52,
+        ),
+        Light(
+            5,
+            "light_epChT",
+            status=EntityStatus.OFF_STOPPED,
+            light_type=LightType.ON_OFF,
+            brightness=100,
+        ),
+        Light(
+            6,
+            "light_DVyyO",
+            status=EntityStatus.OFF_STOPPED,
+            light_type=LightType.ON_OFF,
+            brightness=100,
+        ),
+        Light(
+            7,
+            "light_XeXgB",
+            status=EntityStatus.OFF_STOPPED,
+            light_type=LightType.DIMMABLE,
+            brightness=14,
+        ),
+        Opening(
+            0,
+            "opening_GxwWQ",
+            close_entity_id=0,
+            status=EntityStatus.OFF_STOPPED,
+            opening_type=OpeningType.OPEN_CLOSE,
+            partial_openings=[],
+        ),
+        Opening(
+            1,
+            "opening_UFjCM",
+            close_entity_id=1,
+            status=EntityStatus.OFF_STOPPED,
+            opening_type=OpeningType.OPEN_CLOSE,
+            partial_openings=[],
+        ),
+        Opening(
+            2,
+            "opening_TwwAv",
+            close_entity_id=2,
+            status=EntityStatus.OFF_STOPPED,
+            opening_type=OpeningType.OPEN_CLOSE,
+            partial_openings=[],
+        ),
+        DigitalInput(
+            0,
+            "digitalin_PvGCT",
+            button_type=DigitalInputType.BUTTON,
+            address=200,
+            ack_code=1,
+            radio_node_id="00000000",
+            rf_radio_link_quality=0,
+            utc_time=0,
+        ),
+        DigitalInput(
+            1,
+            "digitalin_BuTbB",
+            button_type=DigitalInputType.BUTTON,
+            address=201,
+            ack_code=0,
+            radio_node_id="00000000",
+            rf_radio_link_quality=0,
+            utc_time=1708366780,
+        ),
+        DigitalInput(
+            2,
+            "digitalin_meatO",
+            button_type=DigitalInputType.BUTTON,
+            address=202,
+            ack_code=0,
+            radio_node_id="00000000",
+            rf_radio_link_quality=0,
+            utc_time=1708319672,
+        ),
+        DigitalInput(
+            3,
+            "digitalin_SAgye",
+            button_type=DigitalInputType.BUTTON,
+            address=203,
+            ack_code=1,
+            radio_node_id="00000000",
+            rf_radio_link_quality=0,
+            utc_time=0,
+        ),
+        DigitalInput(
+            4,
+            "digitalin_kzvCi",
+            button_type=DigitalInputType.BUTTON,
+            address=204,
+            ack_code=0,
+            radio_node_id="00000000",
+            rf_radio_link_quality=0,
+            utc_time=1708370274,
+        ),
+        Scenario(
+            0,
+            "scenario_SGgbR",
+            status=EntityStatus.OFF_STOPPED,
+            scenario_status=ScenarioStatus.NOT_APPLIED,
+            icon=ScenarioIcon.LIGHTS,
+            is_user_defined=False,
+        ),
+        Scenario(
+            1,
+            "scenario_OjEUl",
+            status=EntityStatus.OFF_STOPPED,
+            scenario_status=ScenarioStatus.NOT_APPLIED,
+            icon=ScenarioIcon.LIGHTS,
+            is_user_defined=False,
+        ),
+        Scenario(
+            2,
+            "scenario_dhbOA",
+            status=EntityStatus.OFF_STOPPED,
+            scenario_status=ScenarioStatus.NOT_APPLIED,
+            icon=ScenarioIcon.LIGHTS,
+            is_user_defined=False,
+        ),
+    }
+)
+
+MockedLights = CameEntitySet(
+    [item for item in MockedEntities if isinstance(item, Light)]
+)
+
+MockedOpenings = CameEntitySet(
+    [item for item in MockedEntities if isinstance(item, Opening)]
+)
+
+MockedDigitalInputs = CameEntitySet(
+    [item for item in MockedEntities if isinstance(item, DigitalInput)]
+)
+
+MockedScenarios = CameEntitySet(
+    [item for item in MockedEntities if isinstance(item, Scenario)]
+)

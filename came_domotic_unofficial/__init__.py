@@ -42,7 +42,7 @@ Usage:
 import sys
 import logging
 from importlib.metadata import version, PackageNotFoundError
-from .came_eti_domo_server import CameETIDomoServer
+from .came_etidomo_server import CameETIDomoServer
 
 # Get the package version
 try:

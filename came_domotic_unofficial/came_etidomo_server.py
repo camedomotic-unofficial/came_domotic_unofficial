@@ -245,7 +245,7 @@ class CameETIDomoServer:
             )
 
         # Dispose the resources
-        self.__del__()
+        self.dispose()
 
         # Return True if the exception was handled, False to propagate it
         return False
