@@ -128,7 +128,7 @@ def test_opening_repr_method():
     )
 
     assert repr(opening) == (
-        'Opening(1,2,"Test Opening",status=EntityStatus.ON_OPEN_TRIGGERED,'
+        'Opening(1,"Test Opening",close_entity_id=2,status=EntityStatus.ON_OPEN_TRIGGERED,'
         "opening_type=OpeningType.OPEN_CLOSE,partial_openings=[])"
     )
 

@@ -110,8 +110,8 @@ class Opening(CameEntity):
 
     def __repr__(self) -> str:
         return (
-            f"{type(self).__name__}({self.id},{self.close_entity_id},"
-            f'"{self.name}",status={self.status},'
+            f'{type(self).__name__}({self.id},"{self.name}",'
+            f"close_entity_id={self.close_entity_id},status={self.status},"
             f"opening_type={self.opening_type},"
             f"partial_openings={self.partial_openings})"
         )
