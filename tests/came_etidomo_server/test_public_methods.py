@@ -30,6 +30,7 @@ from mocked_responses import (
     FEATURE_LIST_RESP,
     GENERIC_REPLY,
     SL_LOGOUT_ACK,
+    SL_KEEP_ALIVE_ACK,
     Command2MockedResponse,
     MockedEntities,
 )
@@ -687,5 +688,104 @@ def test_dispose_post_with_exception(mock_close, mock_post, mock_get):
 #             e,
 #             traceback.format_exc(),
 #         )
+
+
+@patch.object(requests.Session, "post")
+def test_keep_alive_success(mock_post, mocked_server_auth):
+    """
+    Test that the keep_alive method returns True when the server responds with a
+    status code of 200 and the expected data.
+    """
+    # Create a mock response with status code 200 and some data
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = SL_KEEP_ALIVE_ACK
+
+    mock_post.return_value = mock_response
+
+    # Call the set_entity_status method
+    successful = mocked_server_auth.keep_alive()
+
+    # Check if the post method was called
+    mock_post.assert_called_once()
+    assert successful
+
+
+@patch.object(requests.Session, "post")
+def test_keep_alive_bad_ack(mock_post, mocked_server_auth):
+    """
+    Test that the keep_alive method returns False when the server responds with a
+    non-zero ack code.
+    """
+    # Create a mock response with status code 200 and some data
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = copy.deepcopy(SL_KEEP_ALIVE_ACK)
+    mock_response.json.return_value["sl_data_ack_reason"] = 1
+
+    mock_post.return_value = mock_response
+
+    # Call the set_entity_status method
+    successful = mocked_server_auth.keep_alive()
+
+    # Check if the post method was called
+    mock_post.assert_called_once()
+    assert not successful
+
+
+@patch.object(requests.Session, "post")
+def test_keep_alive_exceptions(mock_post, mocked_server_auth):
+    """
+    Test that the keep_alive method returns False when the server responds with a
+    non-zero ack code.
+    """
+    # Create a mock response with status code 200 and some data
+    mock_post.side_effect = CameDomoticRequestError()
+
+    # Call the set_entity_status method
+    successful = mocked_server_auth.keep_alive()
+
+    # Check if the post method was called
+    mock_post.assert_called_once()
+    assert not successful
+
+    # Create a mock response with status code 200 and some data
+    mock_post.side_effect = requests.exceptions.RequestException()
+
+    # Call the set_entity_status method
+    successful = mocked_server_auth.keep_alive()
+
+    # Check if the post method was called
+    assert mock_post.call_count == 2
+    assert not successful
+
+
+@patch.object(requests.Session, "post")
+def test_keep_alive_request(mock_post, mocked_server_auth):
+    """
+    Test that the POST request is compliant with the CAME server interface.
+    """
+
+    # Create a mock response with status code 200 and some data
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = SL_KEEP_ALIVE_ACK
+
+    mock_post.return_value = mock_response
+
+    # Call the set_entity_status method
+    mocked_server_auth.keep_alive()
+
+    # {"sl_client_id": "my_session_id", "sl_cmd": "sl_keep_alive_req"}
+
+    request_data = json.loads(mock_post.call_args[1]["data"]["command"])
+
+    expected_request_data = {
+        "sl_client_id": "my_session_id",
+        "sl_cmd": "sl_keep_alive_req",
+    }
+
+    assert set(expected_request_data).issubset(set(request_data))
+
 
 # endregion
