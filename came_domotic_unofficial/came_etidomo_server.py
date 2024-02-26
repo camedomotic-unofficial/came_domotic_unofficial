@@ -554,8 +554,7 @@ class CameETIDomoServer:
         """
         try:
             if self.is_authenticated:
-                logout_succeded = self._logout()
-                if not logout_succeded:
+                if not self._logout():
                     _LOGGER.warning("Logout failed.")
             self._http_session.close()
             _LOGGER.debug("Resources disposed.")
@@ -673,15 +672,12 @@ class CameETIDomoServer:
                 _LOGGER.debug("Logged off.")
                 return True
             else:
-                _LOGGER.error("The user is not authorized. Response: %s", response)
-                return False
-
-        except CameDomoticRequestError as e:
-            _LOGGER.error("Error trying to logoff. Error: %s", e)
-            return False
+                _LOGGER.error("Server returned a non-OK response: %s", response)
+        except CameDomoticRequestError:
+            _LOGGER.exception("Error trying to logoff.")
         except Exception:  # pylint: disable=broad-exception-caught
-            _LOGGER.error("Unexpected error trying to logoff.", exc_info=True)
-            return False
+            _LOGGER.exception("Unexpected error trying to logoff.")
+        return False
 
     def _send_command(self, data: dict):
         try:
@@ -711,11 +707,9 @@ status code: {response.status_code}"
         # In case of a request exception, try to dispose the old session
         # and to refresh the HTTP session object, then rethrow the exception
         except requests.RequestException as e:
-            _LOGGER.error(
+            _LOGGER.exception(
                 "RequestException caught while sending a POST command "
-                "to the CAME server. Error: %s\n%s",
-                e,
-                traceback.format_exc(),
+                "to the CAME server."
             )
             _LOGGER.info("Trying to refresh the HTTP session.")
             self._http_session.close()
