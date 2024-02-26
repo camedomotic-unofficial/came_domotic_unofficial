@@ -269,35 +269,35 @@ class CameETIDomoServer:
     @property
     def keycode(self) -> str:
         """Keycode (unique ID) of the CAME Eti/Domo server."""
-        if self._keycode == "":
+        if self._keycode == "" or not self.is_authenticated:
             self.get_features()
         return self._keycode
 
     @property
     def software_version(self) -> str:
         """Software version of the CAME Eti/Domo server."""
-        if self._software_version == "":
+        if self._software_version == "" or not self.is_authenticated:
             self.get_features()
         return self._software_version
 
     @property
     def server_type(self) -> str:
         """Type of CAME Eti/Domo server."""
-        if self._type == "":
+        if self._type == "" or not self.is_authenticated:
             self.get_features()
         return self._type
 
     @property
     def board(self) -> str:
         """Board type of the CAME Eti/Domo server."""
-        if self._board == "":
+        if self._board == "" or not self.is_authenticated:
             self.get_features()
         return self._board
 
     @property
     def serial_number(self) -> str:
         """Serial number of the CAME Eti/Domo server."""
-        if self._serial_number == "":
+        if self._serial_number == "" or not self.is_authenticated:
             self.get_features()
         return self._serial_number
 
@@ -628,11 +628,11 @@ class CameETIDomoServer:
                 _LOGGER.error("The user is not authorized. Response: %s", response)
                 return False
 
-        except CameDomoticRequestError as e:
-            _LOGGER.error("Error trying login with the server. Error: %s", e)
+        except CameDomoticRequestError:
+            _LOGGER.exception("Error trying login with the server.")
             return False
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            _LOGGER.error("Unexpected error trying login with the server. Error: %s", e)
+        except Exception:  # pylint: disable=broad-exception-caught
+            _LOGGER.exception("Unexpected error trying login with the server.")
             return False
 
     def _logout(self) -> bool:
