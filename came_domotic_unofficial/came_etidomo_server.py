@@ -498,6 +498,7 @@ class CameETIDomoServer:
             self._cseq -= 1
             return False
 
+    @ensure_login
     def keep_alive(self) -> bool:
         """
         Sends a keep alive request to the CAME server.
@@ -505,10 +506,6 @@ class CameETIDomoServer:
         Returns:
             bool: True if the keep alive was successful, False otherwise.
         """
-
-        if not self.is_authenticated:
-            _LOGGER.debug("Not authenticated, nothing to do.")
-            return False
 
         # Input example
         # {
@@ -543,9 +540,9 @@ class CameETIDomoServer:
             else:
                 _LOGGER.error("Keep alive failed. Response: %s", response)
         except CameDomoticRequestError as e:
-            _LOGGER.error("Error trying to keep alive. Error: %s", e)
+            _LOGGER.exception("Error trying to keep alive the session.")
         except Exception as e:  # pylint: disable=broad-exception-caught
-            _LOGGER.error("Unexpected error trying to keep alive. Error: %s", e)
+            _LOGGER.exception("Unexpected error trying to keep alive the session.")
 
         return False
 
