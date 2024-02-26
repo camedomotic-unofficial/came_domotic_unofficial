@@ -22,10 +22,12 @@ __exit__, __del__).
 """
 
 from datetime import datetime, timezone
-from unittest.mock import patch
+from unittest.mock import patch, Mock
+import requests
 import pytest
 from mocked_responses import FEATURE_LIST_RESP
 from came_domotic_unofficial.came_etidomo_server import CameETIDomoServer
+
 
 # Assuming these are the public properties of your class
 public_properties = {
@@ -38,12 +40,10 @@ public_properties = {
 }
 
 
-@pytest.fixture
 @patch("requests.Session.get")
-def mocked_server_auth(mock_get) -> CameETIDomoServer:
-    """
-    Fixture that provides an authenticated instance of CameETIDomoServer.
-    """
+@pytest.mark.parametrize("property_name, expected_value", public_properties.items())
+def test_properties_already_retrieved(mock_get, property_name, expected_value):
+
     mock_get.return_value.status_code = 200
     server = CameETIDomoServer("192.168.0.3", "user", "password")
 
@@ -51,20 +51,40 @@ def mocked_server_auth(mock_get) -> CameETIDomoServer:
     server._session_id = "my_session_id"
     server._session_expiration_timestamp = datetime(3000, 1, 1, tzinfo=timezone.utc)
     server._cseq = 0
-    server._keycode = FEATURE_LIST_RESP["keycode"]
-    server._software_version = FEATURE_LIST_RESP["swver"]
-    server._type = FEATURE_LIST_RESP["type"]
-    server._board = FEATURE_LIST_RESP["board"]
-    server._serial_number = FEATURE_LIST_RESP["serial"]
+    server._keycode = str(FEATURE_LIST_RESP["keycode"])
+    server._software_version = str(FEATURE_LIST_RESP["swver"])
+    server._type = str(FEATURE_LIST_RESP["type"])
+    server._board = str(FEATURE_LIST_RESP["board"])
+    server._serial_number = str(FEATURE_LIST_RESP["serial"])
 
-    # Emulate the dispose method to avoid calling the remote server
-    server.dispose = lambda: None
+    # Override the dispose method to avoid calling the remote server
+    server.dispose = lambda: None  # type: ignore
 
-    return server
+    assert getattr(server, property_name) == expected_value
 
 
+# Patched GET to mock the check of the server availability in the __init__ phase
+# and POST to mock the retrieval of the properties values from the server
+@patch("requests.Session.get")
+@patch.object(requests.Session, "post")
 @pytest.mark.parametrize("property_name, expected_value", public_properties.items())
-def test_properties(mocked_server_auth, property_name, expected_value):
-    # Test that each property can be retrieved without error
-    assert hasattr(mocked_server_auth, property_name)
-    assert getattr(mocked_server_auth, property_name) == expected_value
+def test_properties_not_retrieved(mock_post, mock_get, property_name, expected_value):
+
+    mock_get.return_value.status_code = 200
+    server = CameETIDomoServer("192.168.0.3", "user", "password")
+
+    # Manually set session attributes to emulate the authentication
+    server._session_id = "my_session_id"
+    server._session_expiration_timestamp = datetime(3000, 1, 1, tzinfo=timezone.utc)
+    server._cseq = 0
+
+    # Override the dispose method to avoid calling the remote server
+    server.dispose = lambda: None  # type: ignore
+
+    # Mock the call to the remote server
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = FEATURE_LIST_RESP
+    mock_post.return_value = mock_response
+
+    assert getattr(server, property_name) == expected_value

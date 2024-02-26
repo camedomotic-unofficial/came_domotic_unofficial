@@ -682,7 +682,7 @@ class CameETIDomoServer:
         except CameDomoticRequestError as e:
             _LOGGER.error("Error trying to logoff. Error: %s", e)
             return False
-        except Exception as e:  # pylint: disable=broad-exception-caught
+        except Exception:  # pylint: disable=broad-exception-caught
             _LOGGER.error("Unexpected error trying to logoff.", exc_info=True)
             return False
 
