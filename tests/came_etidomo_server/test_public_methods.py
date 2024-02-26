@@ -29,6 +29,7 @@ import requests
 from mocked_responses import (
     FEATURE_LIST_RESP,
     GENERIC_REPLY,
+    SL_LOGOUT_ACK,
     Command2MockedResponse,
     MockedEntities,
 )
@@ -599,5 +600,92 @@ def test_set_entity_status_request_scenario(mock_post, mocked_server_auth):
     assert set(expected_request_data).issubset(set(request_data))
     assert set(expected_application_data).issubset(set(application_data))
 
+
+@patch("requests.Session.get")
+@patch.object(requests.Session, "post")
+def test_dispose_post_request(mock_post, mock_get):
+    """
+    Test that the dispose method sends a POST request to the server
+    and that the request is compliant with the CAME server interface.
+    """
+    mock_get.return_value.status_code = 200
+    server = CameETIDomoServer("192.168.0.3", "user", "password")
+    server._session_id = "my_session_id"
+    server._session_expiration_timestamp = datetime(3000, 1, 1, tzinfo=timezone.utc)
+
+    # Create a mock response with status code 200 and some data
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = SL_LOGOUT_ACK
+
+    mock_post.return_value = mock_response
+
+    # Call the dispose method
+    server.dispose()
+
+    request_data = json.loads(mock_post.call_args[1]["data"]["command"])
+
+    expected_request_data = {"sl_client_id": "my_session_id", "sl_cmd": "sl_logout_req"}
+
+    mock_post.assert_called_once()
+    assert set(expected_request_data).issubset(set(request_data))
+
+
+@patch("requests.Session.get")
+@patch.object(requests.Session, "close")
+def test_dispose_close_http_session(mock_close, mock_get):
+    """
+    Test that the dispose method closes the http session.
+    """
+    mock_get.return_value.status_code = 200
+    server = CameETIDomoServer("192.168.0.3", "user", "password")
+
+    # Call the dispose method
+    server.dispose()
+    mock_close.assert_called_once()
+
+
+@patch("requests.Session.get")
+@patch.object(requests.Session, "post")
+@patch.object(requests.Session, "close")
+def test_dispose_post_with_exception(mock_close, mock_post, mock_get):
+    """
+    Test that the dispose method closes the http session even if an exception is raised
+    while sending the logout POST request.
+    """
+    mock_get.return_value.status_code = 200
+    server = CameETIDomoServer("192.168.0.3", "user", "password")
+    server._session_id = "my_session_id"
+    server._session_expiration_timestamp = datetime(3000, 1, 1, tzinfo=timezone.utc)
+
+    mock_post.side_effect = requests.exceptions.RequestException
+
+    # Call the dispose method
+    server.dispose()
+    assert mock_close.call_count >= 1
+
+    # Trick to kill some sort of circular reference happening at the end of this test
+    server.dispose = lambda: None  # type: ignore
+
+
+# def dispose(self) -> None:
+#     """
+#     Dispose the resources used by the server.
+
+#     raise: Nothing, everything is managed internally.
+#     """
+#     try:
+#         if self.is_authenticated:
+#             logout_succeded = self._logout()
+#             if not logout_succeded:
+#                 _LOGGER.warning("Logout failed.")
+#         self._http_session.close()
+#         _LOGGER.debug("Resources disposed.")
+#     except Exception as e:  # pylint: disable=broad-exception-caught
+#         _LOGGER.error(
+#             "Unexpected error disposing the resources. Error: %s\n%s",
+#             e,
+#             traceback.format_exc(),
+#         )
 
 # endregion
