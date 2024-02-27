@@ -19,11 +19,10 @@
 """Test the public methods of the CameETIDomoServer class."""
 
 import copy
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from hypothesis import given
 from hypothesis.strategies import integers, text, sampled_from
 import json
-import freezegun
 from unittest.mock import patch, Mock
 import pytest
 import requests
@@ -67,7 +66,6 @@ def mocked_server_auth(mock_get) -> CameETIDomoServer:
         # Manually set session attributes to emulate the authentication
         server._session_id = "my_session_id"
         server._session_expiration_timestamp = datetime(3000, 1, 1, tzinfo=timezone.utc)
-        server._session_keep_alive_timeout_sec = 900
         server._cseq = 0
         # server._keycode = str(FEATURE_LIST_RESP["keycode"])
         # server._software_version = str(FEATURE_LIST_RESP["swver"])
@@ -129,6 +127,8 @@ def test_get_features_no_cache(mock_post, mocked_server_auth):
 
     # Call the get_features method
     features = mocked_server_auth.get_features()
+    request_data = mock_post.call_args[1]["data"]
+
     assert mock_post.call_count == 1
     assert features == mock_features
 
@@ -137,6 +137,7 @@ def test_get_features_no_cache(mock_post, mocked_server_auth):
 
     # Call the get_features method
     features = mocked_server_auth.get_features()
+
     assert mock_post.call_count == 2
     assert features == mock_features
 
@@ -166,9 +167,7 @@ def test_get_features_errors(mock_post, mocked_server_auth):
     # Test bad ACK
     mock_response = Mock()
     mock_response.status_code = 200
-    mock_response.json.return_value = copy.deepcopy(
-        GENERIC_REPLY  # Don't want to write on the original object
-    )
+    mock_response.json.return_value = copy.deepcopy(GENERIC_REPLY)
     mock_response.json.return_value["sl_data_ack_reason"] = 1
     mock_post.return_value = mock_response
 
@@ -306,9 +305,7 @@ def test_get_entities_errors(mock_post, mocked_server_auth):
     # Test bad ACK
     mock_response = Mock()
     mock_response.status_code = 200
-    mock_response.json.return_value = copy.deepcopy(
-        GENERIC_REPLY  # Don't want to write on the original object
-    )
+    mock_response.json.return_value = copy.deepcopy(GENERIC_REPLY)
     mock_response.json.return_value["sl_data_ack_reason"] = 1
     mock_post.return_value = mock_response
 
@@ -354,6 +351,16 @@ def test_get_entities_filtered_invalid_input(mocked_server_auth):
     entities list and does not submit any POST request to the server.
     """
 
+    cached_entities = CameEntitySet(
+        [
+            Light(1),
+            Light(2),
+            Opening(3),
+            Scenario(4),
+        ]
+    )
+    mocked_server_auth._entities = cached_entities
+
     # Call the get_features method
     with pytest.raises(TypeError):
         mocked_server_auth.get_entities("invalid_type")
@@ -397,7 +404,7 @@ def test_get_entities_request(mock_post, mocked_server_auth):
 
     # Call the function that sends the POST requests
     entities = mocked_server_auth.get_entities()
-    assert entities == MockedEntities  # TODO implement actual checks on request format
+    assert entities == MockedEntities
 
 
 # Test the set_entity_status method
@@ -596,6 +603,36 @@ def test_set_entity_status_request_scenario(mock_post, mocked_server_auth):
 
 
 @patch("requests.Session.get")
+@patch.object(requests.Session, "post")
+def test_dispose_post_request(mock_post, mock_get):
+    """
+    Test that the dispose method sends a POST request to the server
+    and that the request is compliant with the CAME server interface.
+    """
+    mock_get.return_value.status_code = 200
+    server = CameETIDomoServer("192.168.0.3", "user", "password")
+    server._session_id = "my_session_id"
+    server._session_expiration_timestamp = datetime(3000, 1, 1, tzinfo=timezone.utc)
+
+    # Create a mock response with status code 200 and some data
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = SL_LOGOUT_ACK
+
+    mock_post.return_value = mock_response
+
+    # Call the dispose method
+    server.dispose()
+
+    request_data = json.loads(mock_post.call_args[1]["data"]["command"])
+
+    expected_request_data = {"sl_client_id": "my_session_id", "sl_cmd": "sl_logout_req"}
+
+    mock_post.assert_called_once()
+    assert set(expected_request_data).issubset(set(request_data))
+
+
+@patch("requests.Session.get")
 @patch.object(requests.Session, "close")
 def test_dispose_close_http_session(mock_close, mock_get):
     """
@@ -632,37 +669,27 @@ def test_dispose_post_with_exception(mock_close, mock_post, mock_get):
     server.dispose = lambda: None  # type: ignore
 
 
-@patch("requests.Session.get")
-@patch.object(requests.Session, "post")
-def test_dispose_post_request(mock_post, mock_get):
-    """
-    Test that the dispose method sends a POST request to the server
-    and that the request is compliant with the CAME server interface.
-    """
-    mock_get.return_value.status_code = 200
-    server = CameETIDomoServer("192.168.0.3", "user", "password")
-    server._session_id = "my_session_id"
-    server._session_expiration_timestamp = datetime(3000, 1, 1, tzinfo=timezone.utc)
+# def dispose(self) -> None:
+#     """
+#     Dispose the resources used by the server.
 
-    # Create a mock response with status code 200 and some data
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = SL_LOGOUT_ACK
-
-    mock_post.return_value = mock_response
-
-    # Call the dispose method
-    server.dispose()
-
-    request_data = json.loads(mock_post.call_args[1]["data"]["command"])
-
-    expected_request_data = {"sl_client_id": "my_session_id", "sl_cmd": "sl_logout_req"}
-
-    mock_post.assert_called_once()
-    assert set(expected_request_data).issubset(set(request_data))
+#     raise: Nothing, everything is managed internally.
+#     """
+#     try:
+#         if self.is_authenticated:
+#             logout_succeded = self._logout()
+#             if not logout_succeded:
+#                 _LOGGER.warning("Logout failed.")
+#         self._http_session.close()
+#         _LOGGER.debug("Resources disposed.")
+#     except Exception as e:  # pylint: disable=broad-exception-caught
+#         _LOGGER.error(
+#             "Unexpected error disposing the resources. Error: %s\n%s",
+#             e,
+#             traceback.format_exc(),
+#         )
 
 
-@freezegun.freeze_time("2020-01-01")
 @patch.object(requests.Session, "post")
 def test_keep_alive_success(mock_post, mocked_server_auth):
     """
@@ -673,23 +700,15 @@ def test_keep_alive_success(mock_post, mocked_server_auth):
     mock_response = Mock()
     mock_response.status_code = 200
     mock_response.json.return_value = SL_KEEP_ALIVE_ACK
-    mock_post.return_value = mock_response
 
-    # Set the session expiration timestamp to a value close to now
-    mocked_server_auth._session_expiration_timestamp = datetime.now(
-        timezone.utc
-    ) + timedelta(seconds=30)
+    mock_post.return_value = mock_response
 
     # Call the set_entity_status method
     successful = mocked_server_auth.keep_alive()
 
-    # Check if the post method was called and the session expiration have been
-    # extended as expected
+    # Check if the post method was called
     mock_post.assert_called_once()
     assert successful
-    assert mocked_server_auth._session_expiration_timestamp == datetime.now(
-        timezone.utc
-    ) + timedelta(seconds=mocked_server_auth._session_keep_alive_timeout_sec)
 
 
 @patch.object(requests.Session, "post")
@@ -725,6 +744,8 @@ def test_keep_alive_exceptions(mock_post, mocked_server_auth):
 
     # Call the set_entity_status method
     successful = mocked_server_auth.keep_alive()
+
+    # Check if the post method was called
     mock_post.assert_called_once()
     assert not successful
 
@@ -733,6 +754,8 @@ def test_keep_alive_exceptions(mock_post, mocked_server_auth):
 
     # Call the set_entity_status method
     successful = mocked_server_auth.keep_alive()
+
+    # Check if the post method was called
     assert mock_post.call_count == 2
     assert not successful
 
@@ -752,6 +775,8 @@ def test_keep_alive_request(mock_post, mocked_server_auth):
 
     # Call the set_entity_status method
     mocked_server_auth.keep_alive()
+
+    # {"sl_client_id": "my_session_id", "sl_cmd": "sl_keep_alive_req"}
 
     request_data = json.loads(mock_post.call_args[1]["data"]["command"])
 

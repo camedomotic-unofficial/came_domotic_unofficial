@@ -49,7 +49,6 @@ def test_properties_already_retrieved(mock_get, property_name, expected_value):
 
     # Manually set session attributes to emulate the authentication
     server._session_id = "my_session_id"
-    server._session_keep_alive_timeout_sec = 900
     server._session_expiration_timestamp = datetime(3000, 1, 1, tzinfo=timezone.utc)
     server._cseq = 0
     server._keycode = str(FEATURE_LIST_RESP["keycode"])
@@ -76,7 +75,6 @@ def test_properties_not_retrieved(mock_post, mock_get, property_name, expected_v
 
     # Manually set session attributes to emulate the authentication
     server._session_id = "my_session_id"
-    server._session_keep_alive_timeout_sec = 900
     server._session_expiration_timestamp = datetime(3000, 1, 1, tzinfo=timezone.utc)
     server._cseq = 0
 
