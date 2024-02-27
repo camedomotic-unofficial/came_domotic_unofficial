@@ -182,6 +182,7 @@ class CameETIDomoServer:
         # Session attributes
         self._http_session = requests.Session()  # This is thread safe
         self._session_id = ""
+        self._session_keep_alive_timeout_sec = 0
         self._session_expiration_timestamp = datetime(2000, 1, 1, tzinfo=timezone.utc)
         self._keep_alive_required = (
             keep_alive  # TODO If True, the server will keep the session alive
@@ -535,6 +536,10 @@ class CameETIDomoServer:
                 response["sl_cmd"] == "sl_keep_alive_ack"
                 and response["sl_data_ack_reason"] == 0
             ):
+                # Refresh the session expiration timestamp
+                self._session_expiration_timestamp = datetime.now(
+                    timezone.utc
+                ) + timedelta(seconds=self._session_keep_alive_timeout_sec)
                 _LOGGER.debug("Keep alive successful.")
                 return True
             else:
@@ -610,9 +615,12 @@ class CameETIDomoServer:
                 self._session_id = response["sl_client_id"]
                 # Be conservative and set expiration datetime 30 seconds
                 # before the actual expiration
+                self._session_keep_alive_timeout_sec = (
+                    response["sl_keep_alive_timeout_sec"] - 30
+                )
                 self._session_expiration_timestamp = datetime.now(
                     timezone.utc
-                ) + timedelta(seconds=response["sl_keep_alive_timeout_sec"] - 30)
+                ) + timedelta(seconds=self._session_keep_alive_timeout_sec)
                 self._cseq = 0  # Reset the cseq sequence
 
                 _LOGGER.debug(
@@ -700,6 +708,11 @@ status code: {response.status_code}"
 
             _LOGGER.debug(
                 "POST command sent successfully, response retrieved.",
+            )
+
+            # Refresh the session expiration timestamp, keeping 30 secs of "safe zone"
+            self._session_expiration_timestamp = datetime.now(timezone.utc) + timedelta(
+                seconds=self._session_keep_alive_timeout_sec
             )
 
             return response.json()
