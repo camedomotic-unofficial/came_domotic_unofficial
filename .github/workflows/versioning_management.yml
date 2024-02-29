@@ -1,0 +1,77 @@
+name: Versioning and Release Management
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  versioning:
+    if: github.event.pull_request.merged == true || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out the code
+      uses: actions/checkout@v2
+      
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x' # Replace '3.x' with the specific version of Python you need
+    
+    - name: Upgrade pip
+      run: python -m pip install --upgrade pip    
+
+    - name: Install dependencies
+      run: pip install setuptools_scm auto-changelog
+
+    - name: Compute version and tag
+      id: scm_version
+      run: |
+        COMPUTE_VERSION=$(python -c 'import setuptools_scm; print(setuptools_scm.get_version())')
+        echo "COMPUTE_VERSION=$COMPUTE_VERSION" >> $GITHUB_ENV
+        echo "GIT_TAG=v$COMPUTE_VERSION" >> $GITHUB_ENV
+
+    - name: Verify version match
+      if: github.ref == 'refs/heads/main'
+      run: |
+          VERSION_IN_CODE=$(python setup.py --version)
+          if [[ "v$VERSION_IN_CODE" != "${{ env.COMPUTE_VERSION }}" ]]; then
+            echo "Version in code ($VERSION_IN_CODE) does not match the computed version (${{ env.COMPUTE_VERSION }})"
+            exit 1
+          fi
+      shell: bash
+
+    - name: Generate Changelog
+      if: github.ref == 'refs/heads/main'
+      run: auto-changelog --output CHANGELOG.md --tag-prefix v
+
+    - name: Create Release Draft
+      if: github.ref == 'refs/heads/main'
+      id: create_release_draft
+      uses: release-drafter/release-drafter@v5
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Push Changelog and Tags
+      if: github.ref == 'refs/heads/main' && steps.create_release_draft.outputs.draft == 'true'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add CHANGELOG.md
+        git commit -m "Update CHANGELOG.md for version ${{ env.COMPUTE_VERSION }}"
+        git tag ${{ env.GIT_TAG }} ${{ github.sha }}
+        git push origin ${{ env.GIT_TAG }}
+        git push origin main
+
+    # Release Drafter creates or updates the draft release notes
+    - name: Draft Release Notes
+      if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+      uses: release-drafter/release-drafter@v5
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

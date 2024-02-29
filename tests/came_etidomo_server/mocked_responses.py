@@ -41,6 +41,13 @@ SL_REGISTRATION_ACK = {
     "sl_data_ack_reason": 0,
 }
 
+SL_USERS_LIST_RESP = {
+    "sl_cmd": "sl_users_list_resp",
+    "sl_data_ack_reason": 0,
+    "sl_client_id": "75c6c33a",
+    "sl_users_list": [{"name": "admin"}],
+}
+
 SL_KEEP_ALIVE_ACK = {
     "sl_cmd": "sl_keep_alive_ack",
     "sl_data_ack_reason": 0,

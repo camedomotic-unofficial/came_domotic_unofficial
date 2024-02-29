@@ -499,6 +499,8 @@ class CameETIDomoServer:
             self._cseq -= 1
             return False
 
+    # TODO embed the keep alive command in the internal logic of the instance
+    # and set it as private
     @ensure_login
     def keep_alive(self) -> bool:
         """
@@ -544,9 +546,9 @@ class CameETIDomoServer:
                 return True
             else:
                 _LOGGER.error("Keep alive failed. Response: %s", response)
-        except CameDomoticRequestError as e:
+        except CameDomoticRequestError:
             _LOGGER.exception("Error trying to keep alive the session.")
-        except Exception as e:  # pylint: disable=broad-exception-caught
+        except Exception:  # pylint: disable=broad-exception-caught
             _LOGGER.exception("Unexpected error trying to keep alive the session.")
 
         return False
@@ -563,12 +565,8 @@ class CameETIDomoServer:
                     _LOGGER.warning("Logout failed.")
             self._http_session.close()
             _LOGGER.debug("Resources disposed.")
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            _LOGGER.error(
-                "Unexpected error disposing the resources. Error: %s\n%s",
-                e,
-                traceback.format_exc(),
-            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            _LOGGER.exception("Unexpected error disposing the resources.")
 
     # endregion
 

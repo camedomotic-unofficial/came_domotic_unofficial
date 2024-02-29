@@ -20,11 +20,9 @@
 
 import copy
 from datetime import datetime, timezone, timedelta
-from hypothesis import given
-from hypothesis.strategies import integers, text, sampled_from
 import json
-import freezegun
 from unittest.mock import patch, Mock
+import freezegun
 import pytest
 import requests
 from mocked_responses import (
@@ -69,14 +67,9 @@ def mocked_server_auth(mock_get) -> CameETIDomoServer:
         server._session_expiration_timestamp = datetime(3000, 1, 1, tzinfo=timezone.utc)
         server._session_keep_alive_timeout_sec = 900
         server._cseq = 0
-        # server._keycode = str(FEATURE_LIST_RESP["keycode"])
-        # server._software_version = str(FEATURE_LIST_RESP["swver"])
-        # server._type = str(FEATURE_LIST_RESP["type"])
-        # server._board = str(FEATURE_LIST_RESP["board"])
-        # server._serial_number = str(FEATURE_LIST_RESP["serial"])
 
         # Override the dispose() method to avoid calling the remote server
-        server.dispose = lambda: None  # type: ignore
+        server.dispose = lambda: None  # type: ignore # pylint: disable=pointless-statement
 
         return server
 
