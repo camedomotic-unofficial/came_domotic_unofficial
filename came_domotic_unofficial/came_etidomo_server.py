@@ -645,7 +645,7 @@ class CameETIDomoServer:
             bool: True if the logout was successful, False otherwise.
         """
         if not self.is_authenticated:
-            _LOGGER.debug("Not authenticated, nothinf to do.")
+            _LOGGER.debug("Not authenticated, nothing to do.")
             return True
 
         # Create the login request
