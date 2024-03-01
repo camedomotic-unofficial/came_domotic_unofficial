@@ -484,6 +484,7 @@ GENERIC_REPLY = {
     "sl_data_ack_reason": 0,
 }
 
+# TODO Remove since now I'm using the mocked post method
 Command2MockedResponse = {
     "digitalin_list_req": DIGITALIN_LIST_RESP,
     "energy_stat_req": ENERGY_STAT_RESP,

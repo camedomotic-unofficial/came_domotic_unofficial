@@ -26,7 +26,13 @@ from unittest.mock import patch, Mock
 import requests
 import pytest
 from mocked_responses import FEATURE_LIST_RESP
+from utils import (
+    mock_get_init,
+    mock_post_method,
+    mock_post_method_error_non_auth,
+)
 from came_domotic_unofficial.came_etidomo_server import CameETIDomoServer
+from came_domotic_unofficial.models import CameDomoticRequestError
 
 
 # Assuming these are the public properties of your class
@@ -40,11 +46,9 @@ public_properties = {
 }
 
 
-@patch("requests.Session.get")
+@patch("requests.Session.get", side_effect=mock_get_init)
 @pytest.mark.parametrize("property_name, expected_value", public_properties.items())
 def test_properties_already_retrieved(mock_get, property_name, expected_value):
-
-    mock_get.return_value.status_code = 200
     server = CameETIDomoServer("192.168.0.3", "user", "password")
 
     # Manually set session attributes to emulate the authentication
@@ -66,27 +70,32 @@ def test_properties_already_retrieved(mock_get, property_name, expected_value):
 
 # Patched GET to mock the check of the server availability in the __init__ phase
 # and POST to mock the retrieval of the properties values from the server
-@patch("requests.Session.get")
-@patch.object(requests.Session, "post")
+@patch("requests.Session.get", side_effect=mock_get_init)
+@patch("requests.Session.post", side_effect=mock_post_method)
 @pytest.mark.parametrize("property_name, expected_value", public_properties.items())
 def test_properties_not_retrieved(mock_post, mock_get, property_name, expected_value):
-
-    mock_get.return_value.status_code = 200
     server = CameETIDomoServer("192.168.0.3", "user", "password")
-
-    # Manually set session attributes to emulate the authentication
-    server._session_id = "my_session_id"
-    server._session_keep_alive_timeout_sec = 900
-    server._session_expiration_timestamp = datetime(3000, 1, 1, tzinfo=timezone.utc)
-    server._cseq = 0
-
-    # Override the dispose method to avoid calling the remote server
     server.dispose = lambda: None  # type: ignore
 
-    # Mock the call to the remote server
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = FEATURE_LIST_RESP
-    mock_post.return_value = mock_response
+    if property_name == "is_authenticated":
+        assert (
+            getattr(server, property_name) == False
+        )  # Now we're not yet authenticated
+    else:
+        assert getattr(server, property_name) == expected_value
 
-    assert getattr(server, property_name) == expected_value
+
+@patch("requests.Session.get", side_effect=mock_get_init)
+@patch("requests.Session.post", side_effect=mock_post_method_error_non_auth)
+@pytest.mark.parametrize("property_name, expected_value", public_properties.items())
+def test_properties_not_retrieved_request_error(
+    mock_post, mock_get, property_name, expected_value
+):
+    server = CameETIDomoServer("192.168.0.3", "user", "password")
+    server.dispose = lambda: None  # type: ignore
+
+    if property_name == "is_authenticated":
+        assert getattr(server, property_name) == False
+    else:
+        with pytest.raises(CameDomoticRequestError):
+            assert getattr(server, property_name) == expected_value

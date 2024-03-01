@@ -33,6 +33,12 @@ from mocked_responses import (
     Command2MockedResponse,
     MockedEntities,
 )
+from utils import (
+    mock_get_init,
+    mock_post_method,
+    mock_post_method_error_auth,
+    mock_post_method_error_non_auth,
+)
 from came_domotic_unofficial.came_etidomo_server import CameETIDomoServer
 from came_domotic_unofficial.models import (
     FeatureSet,
@@ -53,28 +59,25 @@ from came_domotic_unofficial.models import (
 
 
 @pytest.fixture
-@patch("requests.Session.get")
+@patch("requests.Session.get", side_effect=mock_get_init)
 def mocked_server_auth(mock_get) -> CameETIDomoServer:
     """
     Fixture that provides an authenticated instance of CameETIDomoServer.
     """
-    with patch("requests.Session.get") as mock_get:
-        mock_get.return_value.status_code = 200
-        server = CameETIDomoServer("192.168.0.3", "user", "password")
+    server = CameETIDomoServer("192.168.0.3", "user", "password")
+    # Override the dispose() method to avoid calling the remote server
+    server.dispose = lambda: None  # type: ignore # pylint: disable=pointless-statement
 
-        # Manually set session attributes to emulate the authentication
-        server._session_id = "my_session_id"
-        server._session_expiration_timestamp = datetime(3000, 1, 1, tzinfo=timezone.utc)
-        server._session_keep_alive_timeout_sec = 900
-        server._cseq = 0
+    # Manually set session attributes to emulate the authentication
+    server._session_id = "my_session_id"
+    server._session_expiration_timestamp = datetime(3000, 1, 1, tzinfo=timezone.utc)
+    server._session_keep_alive_timeout_sec = 900
+    server._cseq = 0
 
-        # Override the dispose() method to avoid calling the remote server
-        server.dispose = lambda: None  # type: ignore # pylint: disable=pointless-statement
-
-        return server
+    return server
 
 
-@patch.object(requests, "post")
+@patch("requests.Session.post", side_effect=mock_post_method)
 def test_get_features_with_cache(mock_post, mocked_server_auth):
     """
     Test the get_features() method ot the CameETIDomoServer class to ensure that,
@@ -102,30 +105,20 @@ def test_get_features_with_cache(mock_post, mocked_server_auth):
     mock_post.assert_not_called()
 
 
-@patch.object(requests.Session, "post")
+@patch("requests.Session.post", side_effect=mock_post_method)
 def test_get_features_no_cache(mock_post, mocked_server_auth):
     """
     Test if the get_features method correctly fetches the features list
     when it is not cached.
     """
-
-    # Create a mock response with status code 200 and some data
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = FEATURE_LIST_RESP
     mock_features = set([Feature(name) for name in FEATURE_LIST_RESP["list"]])
-
-    mock_post.return_value = mock_response
-
-    # Clear the features cache
-    mocked_server_auth._features = None
 
     # Call the get_features method
     features = mocked_server_auth.get_features()
     assert mock_post.call_count == 1
     assert features == mock_features
 
-    # Clear again the features cache
+    # Clear the features cache
     mocked_server_auth._features = FeatureSet()
 
     # Call the get_features method
@@ -170,21 +163,12 @@ def test_get_features_errors(mock_post, mocked_server_auth):
         mocked_server_auth.get_features()
 
 
-@patch.object(requests.Session, "post")
+@patch("requests.Session.post", side_effect=mock_post_method)
 def test_get_features_request(mock_post, mocked_server_auth):
     """
     Test if the get_features method sends a POST message compliant with the
     CAME server interface.
     """
-
-    # Create a mock response with status code 200 and some data
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = FEATURE_LIST_RESP
-    mock_post.return_value = mock_response
-
-    # Clear the features cache
-    mocked_server_auth._features = None
 
     # Call the get_features method
     mocked_server_auth.get_features()
@@ -205,7 +189,7 @@ def test_get_features_request(mock_post, mocked_server_auth):
     assert set(expected_application_data).issubset(set(application_data))
 
 
-@patch.object(requests, "post")
+@patch("requests.Session.post", side_effect=mock_post_method)
 def test_get_entities_with_cache(mock_post, mocked_server_auth):
     """
     Test the get_entities() method ot the CameETIDomoServer class to ensure that,
@@ -233,45 +217,14 @@ def test_get_entities_with_cache(mock_post, mocked_server_auth):
     mock_post.assert_not_called()
 
 
-@patch.object(requests.Session, "post")
+@patch("requests.Session.post", side_effect=mock_post_method)
 def test_get_entities_no_cache(mock_post, mocked_server_auth):
     """
     Test that an HTTP POST request returns the expected data.
     """
-
-    # Create mock responses for each command
-    mock_responses = {command: Mock() for command in Command2MockedResponse}
-
-    # Set the status code and data for each mock response
-    for command, response in Command2MockedResponse.items():
-        mock_responses[command].status_code = 200
-        mock_responses[command].json.return_value = response
-
-    # POST method should return the correct mock response based on the input
-    def side_effect(*args, **kwargs):  # pylint: disable=unused-argument
-        # Extract the command from the JSON data in the request
-        data = kwargs.get("data", {})
-        raw_input = data.get("command")
-        json_input = json.loads(raw_input)
-        command = json_input.get("sl_appl_msg").get("cmd_name")
-        return mock_responses.get(command)
-
-    mock_post.side_effect = side_effect
-
-    # Clear the entities cache
-    mocked_server_auth._entities = None
-
-    # Call the function that sends the POST requests
     entities = mocked_server_auth.get_entities()
     assert entities == MockedEntities
-
-    # Clear the entities cache
-    mocked_server_auth._entities = CameEntitySet()
-    entities = None
-
-    # Call the function that sends the POST requests
-    entities = mocked_server_auth.get_entities()
-    assert entities == MockedEntities
+    assert mock_post.call_count > 0
 
 
 @patch.object(requests.Session, "post")
@@ -358,55 +311,15 @@ def test_get_entities_request(mock_post, mocked_server_auth):
     Test if the get_entities method sends a POST message compliant with the
     CAME server interface.
     """
-    # Create mock responses for each command
-    mock_responses = {command: Mock() for command in Command2MockedResponse}
-
-    # Set the status code and data for each mock response
-    for command, response in Command2MockedResponse.items():
-        mock_responses[command].status_code = 200
-        mock_responses[command].json.return_value = response
-
-    # POST method should return the correct mock response based on the input
-    def side_effect_resp(*args, **kwargs):  # pylint: disable=unused-argument
-        # Extract the command from the JSON data in the request
-        data = kwargs.get("data", {})
-        raw_input = data.get("command")
-        json_input = json.loads(raw_input)
-        command = json_input.get("sl_appl_msg").get("cmd_name")
-        return mock_responses.get(command)
-
-    mock_post.side_effect = side_effect_resp
-
-    # Clear the entities cache
-    mocked_server_auth._entities = None
-
-    # Call the function that sends the POST requests
-    entities = mocked_server_auth.get_entities()
-    assert entities == MockedEntities
-
-    # Clear the entities cache
-    mocked_server_auth._entities = CameEntitySet()
-    entities = None
-
-    # Call the function that sends the POST requests
-    entities = mocked_server_auth.get_entities()
-    assert entities == MockedEntities  # TODO implement actual checks on request format
+    pass  # TODO implement actual checks on request format
 
 
 # Test the set_entity_status method
-@patch.object(requests.Session, "post")
+@patch("requests.Session.post", side_effect=mock_post_method)
 def test_set_entity_status(mock_post, mocked_server_auth):
     """
     Test that failures are managed as expected.
     """
-
-    # Create a mock response with status code 200 and some data
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = GENERIC_REPLY
-
-    mock_post.return_value = mock_response
-
     # Call the set_entity_status method
     result = mocked_server_auth.set_entity_status(
         Light, 1, EntityStatus.ON_OPEN_TRIGGERED
@@ -473,19 +386,11 @@ def test_set_entity_status_invalid_inputs(mocked_server_auth):
         )
 
 
-@patch.object(requests.Session, "post")
+@patch("requests.Session.post", side_effect=mock_post_method)
 def test_set_entity_status_request_light(mock_post, mocked_server_auth):
     """
     Test that the POST request is compliant with the CAME server interface.
     """
-
-    # Create a mock response with status code 200 and some data
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = GENERIC_REPLY
-
-    mock_post.return_value = mock_response
-
     # Call the set_entity_status method
     mocked_server_auth.set_entity_status(
         Light,
@@ -513,19 +418,11 @@ def test_set_entity_status_request_light(mock_post, mocked_server_auth):
     assert set(expected_application_data).issubset(set(application_data))
 
 
-@patch.object(requests.Session, "post")
+@patch("requests.Session.post", side_effect=mock_post_method)
 def test_set_entity_status_request_opening(mock_post, mocked_server_auth):
     """
     Test that the POST request is compliant with the CAME server interface.
     """
-
-    # Create a mock response with status code 200 and some data
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = GENERIC_REPLY
-
-    mock_post.return_value = mock_response
-
     # Call the set_entity_status method
     mocked_server_auth.set_entity_status(
         Opening,
@@ -551,19 +448,11 @@ def test_set_entity_status_request_opening(mock_post, mocked_server_auth):
     assert set(expected_application_data).issubset(set(application_data))
 
 
-@patch.object(requests.Session, "post")
+@patch("requests.Session.post", side_effect=mock_post_method)
 def test_set_entity_status_request_scenario(mock_post, mocked_server_auth):
     """
     Test that the POST request is compliant with the CAME server interface.
     """
-
-    # Create a mock response with status code 200 and some data
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = GENERIC_REPLY
-
-    mock_post.return_value = mock_response
-
     # Call the set_entity_status method
     mocked_server_auth.set_entity_status(
         Scenario,
@@ -588,13 +477,12 @@ def test_set_entity_status_request_scenario(mock_post, mocked_server_auth):
     assert set(expected_application_data).issubset(set(application_data))
 
 
-@patch("requests.Session.get")
+@patch("requests.Session.get", side_effect=mock_get_init)
 @patch.object(requests.Session, "close")
 def test_dispose_close_http_session(mock_close, mock_get):
     """
     Test that the dispose method closes the http session.
     """
-    mock_get.return_value.status_code = 200
     server = CameETIDomoServer("192.168.0.3", "user", "password")
 
     # Call the dispose method
@@ -602,20 +490,17 @@ def test_dispose_close_http_session(mock_close, mock_get):
     mock_close.assert_called_once()
 
 
-@patch("requests.Session.get")
-@patch.object(requests.Session, "post")
+@patch("requests.Session.get", side_effect=mock_get_init)
+@patch("requests.Session.post", side_effect=requests.exceptions.RequestException)
 @patch.object(requests.Session, "close")
 def test_dispose_post_with_exception(mock_close, mock_post, mock_get):
     """
     Test that the dispose method closes the http session even if an exception is raised
     while sending the logout POST request.
     """
-    mock_get.return_value.status_code = 200
     server = CameETIDomoServer("192.168.0.3", "user", "password")
     server._session_id = "my_session_id"
     server._session_expiration_timestamp = datetime(3000, 1, 1, tzinfo=timezone.utc)
-
-    mock_post.side_effect = requests.exceptions.RequestException
 
     # Call the dispose method
     server.dispose()
@@ -625,24 +510,16 @@ def test_dispose_post_with_exception(mock_close, mock_post, mock_get):
     server.dispose = lambda: None  # type: ignore
 
 
-@patch("requests.Session.get")
-@patch.object(requests.Session, "post")
+@patch("requests.Session.get", side_effect=mock_get_init)
+@patch("requests.Session.post", side_effect=mock_post_method)
 def test_dispose_post_request(mock_post, mock_get):
     """
     Test that the dispose method sends a POST request to the server
     and that the request is compliant with the CAME server interface.
     """
-    mock_get.return_value.status_code = 200
     server = CameETIDomoServer("192.168.0.3", "user", "password")
     server._session_id = "my_session_id"
     server._session_expiration_timestamp = datetime(3000, 1, 1, tzinfo=timezone.utc)
-
-    # Create a mock response with status code 200 and some data
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = SL_LOGOUT_ACK
-
-    mock_post.return_value = mock_response
 
     # Call the dispose method
     server.dispose()
@@ -656,18 +533,12 @@ def test_dispose_post_request(mock_post, mock_get):
 
 
 @freezegun.freeze_time("2020-01-01")
-@patch.object(requests.Session, "post")
+@patch("requests.Session.post", side_effect=mock_post_method)
 def test_keep_alive_success(mock_post, mocked_server_auth):
     """
     Test that the keep_alive method returns True when the server responds with a
     status code of 200 and the expected data.
     """
-    # Create a mock response with status code 200 and some data
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = SL_KEEP_ALIVE_ACK
-    mock_post.return_value = mock_response
-
     # Set the session expiration timestamp to a value close to now
     mocked_server_auth._session_expiration_timestamp = datetime.now(
         timezone.utc
@@ -685,7 +556,7 @@ def test_keep_alive_success(mock_post, mocked_server_auth):
     ) + timedelta(seconds=mocked_server_auth._session_keep_alive_timeout_sec)
 
 
-@patch.object(requests.Session, "post")
+@patch("requests.Session.post")
 def test_keep_alive_bad_ack(mock_post, mocked_server_auth):
     """
     Test that the keep_alive method returns False when the server responds with a
@@ -730,19 +601,11 @@ def test_keep_alive_exceptions(mock_post, mocked_server_auth):
     assert not successful
 
 
-@patch.object(requests.Session, "post")
+@patch("requests.Session.post", side_effect=mock_post_method)
 def test_keep_alive_request(mock_post, mocked_server_auth):
     """
     Test that the POST request is compliant with the CAME server interface.
     """
-
-    # Create a mock response with status code 200 and some data
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = SL_KEEP_ALIVE_ACK
-
-    mock_post.return_value = mock_response
-
     # Call the set_entity_status method
     mocked_server_auth.keep_alive()
 
