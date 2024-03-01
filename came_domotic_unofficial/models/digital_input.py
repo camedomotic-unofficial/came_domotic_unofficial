@@ -17,7 +17,7 @@ This module contains the DigitalInput class, which represents a CAME digital inp
 (e.g. a physical button).
 """
 
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Optional
 from .came_entity import CameEntity
 from .enums import DigitalInputType, EntityStatus
@@ -128,7 +128,7 @@ class DigitalInput(CameEntity):
     @property
     def last_pressed(self) -> datetime:
         """Returns the digital input UTC time offset."""
-        return datetime.fromtimestamp(self._utc_time)
+        return datetime.fromtimestamp(self._utc_time, UTC)
 
     def __str__(self) -> str:
         return (

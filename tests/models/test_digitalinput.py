@@ -16,7 +16,7 @@
 Unit tests for the DigitalInput class.
 """
 
-from datetime import datetime
+from datetime import datetime, UTC
 import pytest
 from hypothesis import given
 from hypothesis.strategies import integers, text, sampled_from
@@ -70,7 +70,7 @@ def test_digital_input_init(
     assert digital_input.ack_code == ack_code
     assert digital_input.radio_node_id == radio_node_id
     assert digital_input.rf_radio_link_quality == rf_radio_link_quality
-    assert digital_input.last_pressed == datetime.fromtimestamp(utc_time)
+    assert digital_input.last_pressed == datetime.fromtimestamp(utc_time, UTC)
     assert digital_input.status == EntityStatus.NOT_APPLICABLE
 
 
@@ -87,7 +87,7 @@ def test_digital_input_init_defaults():
     assert digital_input.ack_code == 1
     assert digital_input.radio_node_id == "00000000"
     assert digital_input.rf_radio_link_quality == 0
-    assert digital_input.last_pressed == datetime.fromtimestamp(0)
+    assert digital_input.last_pressed == datetime.fromtimestamp(0, UTC)
     assert digital_input.status == EntityStatus.NOT_APPLICABLE
 
 
@@ -158,7 +158,7 @@ def test_digital_input_str_method():
         'DigitalInput #1: "Test Digital Input" - Type: BUTTON - '
         'Address: 2 - Ack code: 3 - Radio node ID: "Test" - '
         "RF radio link quality: 4 - Last pressed: "
-        f"{datetime.fromtimestamp(5)}"
+        f"{datetime.fromtimestamp(5, UTC)}"
     )
 
 
@@ -240,7 +240,7 @@ def test_digital_input_from_json():
     assert digital_input.ack_code == 1
     assert digital_input.radio_node_id == "00000000"
     assert digital_input.rf_radio_link_quality == 0
-    assert digital_input.last_pressed == datetime.fromtimestamp(0)
+    assert digital_input.last_pressed == datetime.fromtimestamp(0, UTC)
 
 
 def test_digital_input_from_json_defaults():
