@@ -52,7 +52,7 @@ public_properties = [
 @patch("requests.Session.get", side_effect=mock_get_init)
 def mocked_server(mock_get) -> CameETIDomoServer:
     server = CameETIDomoServer("192.168.0.3", "user", "password")
-    server.dispose = lambda: None
+    server.dispose = lambda: None  # type: ignore
     return server
 
 

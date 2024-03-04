@@ -40,7 +40,7 @@ def mocked_server(mock_get) -> CameETIDomoServer:
     Fixture that provides an authenticated instance of CameETIDomoServer.
     """
     server = CameETIDomoServer("192.168.0.3", "user", "password")
-    server.dispose = lambda: None
+    server.dispose = lambda: None  # type: ignore
     return server
 
 
