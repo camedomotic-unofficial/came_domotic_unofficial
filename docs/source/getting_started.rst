@@ -9,7 +9,7 @@ Prerequisites
 
 Before you begin, ensure you have:
 
-- Python 3.6 or newer installed on your system.
+- Python 3.12 or newer installed on your system.
 - Access to a CAME ETI/Domo server.
 
 Installation
