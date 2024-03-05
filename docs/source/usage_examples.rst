@@ -1,3 +1,17 @@
+.. Copyright 2024 - GitHub user: fredericks1982
+
+.. Licensed under the Apache License, Version 2.0 (the "License");
+.. you may not use this file except in compliance with the License.
+.. You may obtain a copy of the License at
+
+..     http://www.apache.org/licenses/LICENSE-2.0
+
+.. Unless required by applicable law or agreed to in writing, software
+.. distributed under the License is distributed on an "AS IS" BASIS,
+.. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.. See the License for the specific language governing permissions and
+.. limitations under the License.
+
 Usage examples
 ==============
 
@@ -26,14 +40,7 @@ To initiate communication with the CAME ETI/Domo server:
 
     from came_domotic_unofficial import CameETIDomoServer
 
-This import is fundamental for creating an instance of the server to manage your domotic
-devices. Also, the following imports are likely to be needed in most use cases:
-
-.. code-block:: python
-
-    from came_domotic_unofficial.models import EntityType, EntityStatus
-
-Working with lists and generic entities
+Working with entities
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``get_features()`` and ``get_entities()`` methods return a list of objects of type
@@ -41,54 +48,28 @@ The ``get_features()`` and ``get_entities()`` methods return a list of objects o
 capability, while the ``CameEntity`` class serves as a base class for all the entities
 in the CAME domotic system, such as lights, openings, scenarios, etc.
 
-To work with these lists and generic entities, you'll need the following imports:
+To work with these lists and the entities, you'll need one or more of the following
+imports:
 
 .. code-block:: python
 
-    from came_domotic_unofficial.models import FeatureSet, Feature, CameEntitySet, CameEntity
-
-Working with specific entities
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-In addition to the above, depending on the entities you plan to interact with,
-also other imports from the ``came_domotic_unofficial.models`` module may be required.
-
-Lights
-""""""
-
-For operations related to light entities, such as retrieving their status or controlling
-them:
-
-.. code-block:: python
-
-    from came_domotic_unofficial.models import Light, LightType
-
-Openings
-""""""""
-
-To manage openings like doors and windows:
-
-.. code-block:: python
-
-    from came_domotic_unofficial.models import Opening, OpeningType
-
-Scenarios
-"""""""""
-
-For activating or deactivating scenarios:
-
-.. code-block:: python
-
-    from came_domotic_unofficial.models import Scenario, ScenarioStatus, ScenarioIcon
-
-Digital Inputs
-""""""""""""""
-
-When working with digital inputs, such as sensors or switches:
-
-.. code-block:: python
-
-    from came_domotic_unofficial.models import DigitalInput, DigitalInputType
+    from came_domotic_unofficial.models import (
+        EntityType,
+        EntityStatus,
+        FeatureSet,
+        CameEntitySet,
+        Feature,
+        CameEntity,
+        Light,
+        LightType,
+        Opening,
+        OpeningType,
+        Scenario,
+        ScenarioStatus,
+        ScenarioIcon,
+        DigitalInput,
+        DigitalInputType,
+    )
 
 Handling Exceptions
 ^^^^^^^^^^^^^^^^^^^
