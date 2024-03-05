@@ -23,8 +23,8 @@ Welcome!
    :target: https://github.com/CAME-Domotic-unofficial/came_domotic_unofficial/actions/workflows/check_code.yml?branch=main
    :alt: Build status
 
-.. image:: https://codecov.io/gh/fredericks1982/came_domotic_unofficial/branch/main/graph/badge.svg
-   :target: https://codecov.io/gh/fredericks1982/came_domotic_unofficial
+.. image:: https://codecov.io/gh/camedomotic-unofficial/came_domotic_unofficial/graph/badge.svg?token=0QSJYP7EP3 
+   :target: https://codecov.io/gh/camedomotic-unofficial/came_domotic_unofficial
    :alt: Code coverage
 
 .. image:: https://readthedocs.org/projects/came-domotic-unofficial/badge/?version=latest
@@ -37,22 +37,21 @@ Welcome!
 
 .. image:: https://img.shields.io/badge/license-Apache%202.0-blue.svg
    :target: https://opensource.org/licenses/Apache-2.0
-   :alt: License
+   :alt: License: Apache 2.0
 
 .. .. image:: https://pepy.tech/badge/came_domotic_unofficial
 ..    :target: https://pepy.tech/project/came_domotic_unofficial
 ..    :alt: Downloads
 
 
-.. Code Quality - A badge from services like Codacy, Code Climate, or SonarCloud that assesses the quality of your code based on various metrics. This can help indicate the maintainability and cleanliness of your code.
+.. Code Quality - A badge from services like Codacy, Code Climate, or SonarCloud that
+.. assesses the quality of your code based on various metrics. This can help indicate
+.. the maintainability and cleanliness of your code.
 
 
-.. Dependencies - Indicates the status of dependencies used by your project, possibly showing if any dependencies are out-of-date or have known vulnerabilities, using tools like Dependabot or Snyk.
-
-
-
-
-
+.. Dependencies - Indicates the status of dependencies used by your project, possibly
+.. showing if any dependencies are out-of-date or have known vulnerabilities, using
+.. tools like Dependabot or Snyk.
 
 The **CAME Domotic unofficial library** offers a streamlined Python interface for 
 interacting with CAME ETI/Domo servers. Designed for both **developers and home automation 
