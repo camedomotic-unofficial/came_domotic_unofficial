@@ -4,7 +4,8 @@ on:
     branches:
       - main
     tags:
-      - 'v*.*.*'
+      - '\d+\.\d+(\.\d+)?((a|b|rc)\d+)?(\.post\d+)?(\.dev\d+)?'
+        # e.g. 1.1, 1.1.1, 1.1.1a1, 1.1.1rc1.post1, 1.1.1a1.dev1
   pull_request:
     types: [closed]
     branches:
@@ -17,12 +18,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check out the code
-      uses: actions/checkout@v2
-      
-    - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/checkout@v4
       with:
-        python-version: '3.x' # Replace '3.x' with the specific version of Python you need
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
     
     - name: Upgrade pip
       run: python -m pip install --upgrade pip    
@@ -34,32 +37,36 @@ jobs:
       id: scm_version
       run: |
         COMPUTE_VERSION=$(python -c 'import setuptools_scm; print(setuptools_scm.get_version())')
+        echo "Computed version: $COMPUTE_VERSION"
         echo "COMPUTE_VERSION=$COMPUTE_VERSION" >> $GITHUB_ENV
-        echo "GIT_TAG=v$COMPUTE_VERSION" >> $GITHUB_ENV
+        echo "GIT_TAG=$COMPUTE_VERSION" >> $GITHUB_ENV
 
-    - name: Verify version match
-      if: github.ref == 'refs/heads/main'
+    - name: Check version format
+      id: check_version_format
       run: |
-          VERSION_IN_CODE=$(python setup.py --version)
-          if [[ "v$VERSION_IN_CODE" != "${{ env.COMPUTE_VERSION }}" ]]; then
-            echo "Version in code ($VERSION_IN_CODE) does not match the computed version (${{ env.COMPUTE_VERSION }})"
-            exit 1
-          fi
-      shell: bash
-
+        regex='^\d+\.\d+(\.\d+)?((a|b|rc)\d+)?(\.post\d+)?(\.dev\d+)?$'
+        if echo "${{ env.COMPUTE_VERSION }}" | grep -qE "$regex"; then
+          echo "VERSION_FORMAT_OK=true" >> $GITHUB_ENV
+        else
+          echo "VERSION_FORMAT_OK=false" >> $GITHUB_ENV
+        fi
+      
     - name: Generate Changelog
-      if: github.ref == 'refs/heads/main'
-      run: auto-changelog --output CHANGELOG.md --tag-prefix v
+      if: env.VERSION_FORMAT_OK == 'true' && github.ref == 'refs/heads/main'
+      run: auto-changelog --output CHANGELOG.md
 
     - name: Create Release Draft
-      if: github.ref == 'refs/heads/main'
+      if: env.VERSION_FORMAT_OK == 'true' && github.ref == 'refs/heads/main'
       id: create_release_draft
       uses: release-drafter/release-drafter@v5
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Push Changelog and Tags
-      if: github.ref == 'refs/heads/main' && steps.create_release_draft.outputs.draft == 'true'
+      if: >-
+        env.VERSION_FORMAT_OK == 'true' && 
+        github.ref == 'refs/heads/main' && 
+        steps.create_release_draft.outputs.draft == 'true'
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
@@ -71,7 +78,11 @@ jobs:
 
     # Release Drafter creates or updates the draft release notes
     - name: Draft Release Notes
-      if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+      if: >-
+        env.VERSION_FORMAT_OK == 'true' && 
+        github.event_name == 'pull_request' && 
+        github.event.action == 'closed' && 
+        github.event.pull_request.merged == true
       uses: release-drafter/release-drafter@v5
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
