@@ -18,12 +18,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "came_domotic_unofficial"
-# name = "came_domotic_unofficial-fredericks1982"
-# version = "0.6.0.post7"
 dynamic = ["version"]
 description = "Library to interact with a CAME ETI/Domo domotic server"
-authors = [{ name = "fredericks1982", email = "fredericks1982@gmail.com" }]
-maintainers = [{ name = "fredericks1982", email = "fredericks1982@gmail.com" }]
+authors = [
+    { name = "camedomotic-unofficial", email = "camedomotic-unofficial@gmail.com" },
+]
+maintainers = [
+    { name = "camedomotic-unofficial", email = "camedomotic-unofficial@gmail.com" },
+]
 keywords = [
     "CAME",
     "ETI/Domo",
@@ -32,21 +34,26 @@ keywords = [
     "home assistant",
     "home-assistant",
 ]
-readme = "README.md"
-requires-python = ">=3.8"
+readme = "README.rst"
+license = { file = "LICENSE" }
+
+requires-python = ">=3.12"
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
-    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Home Automation",
     "Operating System :: OS Independent",
 ]
 dependencies = ["requests"]
 
 [project.urls]
-Homepage = "https://github.com/fredericks1982/came_domotic_unofficial"
-Issues = "https://github.com/fredericks1982/came_domotic_unofficial/issues"
+Homepage = "https://github.com/camedomotic-unofficial/came_domotic_unofficial"
+Documentation = "https://came_domotic_unofficial.readthedocs.io/en/latest/"
+Issues = "https://github.com/camedomotic-unofficial/came_domotic_unofficial"
+Repository = "https://github.com/camedomotic-unofficial/came_domotic_unofficial.git"
+
 
 [tool.setuptools_scm]
 version_file = "came_domotic_unofficial/_version.py"
