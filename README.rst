@@ -1,148 +1,147 @@
-.. raw:: html
+.. Copyright 2024 - GitHub user: fredericks1982
 
-   <!-- 
-   Copyright 2024 - GitHub user: fredericks1982
+.. Licensed under the Apache License, Version 2.0 (the "License");
+.. you may not use this file except in compliance with the License.
+.. You may obtain a copy of the License at
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+..     http://www.apache.org/licenses/LICENSE-2.0
 
-       http://www.apache.org/licenses/LICENSE-2.0
+.. Unless required by applicable law or agreed to in writing, software
+.. distributed under the License is distributed on an "AS IS" BASIS,
+.. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.. See the License for the specific language governing permissions and
+.. limitations under the License.
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License. 
-   -->
+Welcome!
+========
 
-“CAME Domotic unofficial” library
-=================================
+.. image:: https://badge.fury.io/py/came_domotic_unofficial.svg
+   :target: https://pypi.org/project/came_domotic_unofficial/
+   :alt: PyPI version
 
-Library to interact with a CAME ETI/Domo domotic server.
+.. image:: https://github.com/CAME-Domotic-unofficial/came_domotic_unofficial/actions/workflows/check_code.yml/badge.svg?branch=main
+   :target: https://github.com/CAME-Domotic-unofficial/came_domotic_unofficial/actions/workflows/check_code.yml?branch=main
+   :alt: Build status
 
-Currently supported entities
-----------------------------
+.. image:: https://codecov.io/gh/fredericks1982/came_domotic_unofficial/branch/main/graph/badge.svg
+   :target: https://codecov.io/gh/fredericks1982/came_domotic_unofficial
+   :alt: Code coverage
 
--  **Lights**: get list, switch on/off, set brightness (if dimmable).
--  **Openings**: get list, close, stop, open.
--  **Scenarios**: get list, activate.
--  **Digital inputs**: get list.
+.. image:: https://readthedocs.org/projects/came-domotic-unofficial/badge/?version=latest
+   :target: https://came-domotic-unofficial.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation status
 
-Usage
------
+.. image:: https://img.shields.io/badge/python-3.12%20|%203.13-blue.svg
+    :target: https://python.org
+    :alt: Python 3.12 | 3.13
 
-This library manages the remote session automatically, so you don’t need
-to perform an explicit login/logout or to manage the session expiration:
-just use the ``CameETIDomoServer`` object within a ``with`` statement,
-to ensure that the resources are properly disposed.
+.. image:: https://img.shields.io/badge/license-Apache%202.0-blue.svg
+   :target: https://opensource.org/licenses/Apache-2.0
+   :alt: License
 
-The library will login to the CAME server only when you actually need to
-interact with it, and manages automatically the session
-expiration/renewal. If you really need it, you can always check if there
-is an active session testing the attribute ``is_authenticated``.
-
-Here follow some tipical usage examples.
-
-Basic usage
-~~~~~~~~~~~
-
-Declare the server object within a ``with`` statement and perform some
-action, like getting the unique ID of the server.
-
-.. code:: python
-
-   with CameETIDomoServer(
-       "192.168.0.3", 
-       "username", 
-       "password"
-       ) as domo:
-
-       if not domo.is_authenticated:
-           print("Not authenticated, I don't need it yet.")
-
-       # Get the CAME server unique ID
-       server_unique_id = domo.keycode
-
-       if domo.is_authenticated:
-           print("Now I am authenticated, since I needed to ask the server some info.")
-
-Retrieve some data from the server
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code:: python
-
-   with CameETIDomoServer(
-       "192.168.0.3", 
-       "username", 
-       "password"
-       ) as domo:
-
-       # Get the list of features supported by the CAME server
-       features = domo.get_features()
-
-       # Get the list of all the entities configured on the CAME server
-       all_my_entites = domo.get_entities()
-
-       # Get only a subset, by entity type
-       my_lights = domo.get_entities(EntityType.LIGHTS)
-       my_openings = domo.get_entities(EntityType.OPENINGS)
-       my_scenarios = domo.get_entities(EntityType.SCENARIOS)
-       my_digital_inputs = domo.get_entities(EntityType.DIGITALIN)
+.. .. image:: https://pepy.tech/badge/came_domotic_unofficial
+..    :target: https://pepy.tech/project/came_domotic_unofficial
+..    :alt: Downloads
 
 
-       # Get a specific entity
-       my_dimmable_lamp = my_lights[0]
-       kitchen_opening = my_openings[0]
-       scenario_close_all_openings = my_scenarios[0]
-       my_dimmable_lamp_button = my_digital_inputs[0]
+.. Code Quality - A badge from services like Codacy, Code Climate, or SonarCloud that assesses the quality of your code based on various metrics. This can help indicate the maintainability and cleanliness of your code.
 
-Set the status of an entity
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: python
+.. Dependencies - Indicates the status of dependencies used by your project, possibly showing if any dependencies are out-of-date or have known vulnerabilities, using tools like Dependabot or Snyk.
 
-       # Switch on a light and set its brightness
-       if domo.set_entity_status(
-           Light, 
-           my_dimmable_lamp.id, 
-           EntityStatus.ON_OPEN, 
-           brightness=80
-       ):
-           print("Light switched on as expected.")
-       else:
-           print("Failure while trying to switch on the light.")
 
-       # Close an opening
-       if domo.set_entity_status(
-           Opening, 
-           kitchen_opening.id, 
-           EntityStatus.CLOSED):
-           print("Kitchen opening closed.")
-       else:
-           print("Failure while trying to close the opening.")
 
-       # Activate a scenario
-       if domo.set_entity_status(Scenario, close_all_openings.id):
-           print("Scenario activated.")
-       else:
-           print("Failure while trying to activate the scenario.")
+
+
+
+The **CAME Domotic unofficial library** offers a streamlined Python interface for 
+interacting with CAME ETI/Domo servers. Designed for both **developers and home automation 
+enthusiasts**, it simplifies managing domotic devices by abstracting the complexities 
+of the CAME Domotic API.
+
+This tool is ideal for those looking to integrate CAME Domotic technology into 
+`Home Assistant <https://www.home-assistant.io/>`_ or other systems, making device control 
+like **lights**, **openings**, and **scenarios** straightforward and accessible, 
+enabling broader integration possibilities for domotic systems.
+
+.. warning:: 
+    This library is currently in a **pre-alpha development state**.
+    It is not yet stable and should be used only for studying purposes.
+    Please be aware that you cannot rely on it for any production use.
+    Use at your own risk.
+
+.. note:: 
+    This library is independently developed and is not affiliated with, endorsed by,
+    or supported by `CAME <https://www.came.com/>`_. It may not be compatible with all
+    CAME Domotic systems. Use at your own risk.   
+
+.. danger:: 
+
+    This library is not intended for use in critical systems, such as security or 
+    life-support systems. Always use official and supported tools for such applications.
+
+Key Features
+------------
+- **Simplicity**: Easy interaction with domotic entities.
+- **Automatic session management**: No need for manual login or session handling.
+- **First of its kind**: Unique in providing integration with CAME Domotic systems.
+- **Open source**: Freely available under the Apache 2.0 license, inviting
+  contributions and adaptations.
+
+Quick Start
+-----------
+To get started with the CAME Domotic unofficial library, install it using pip:
+
+.. code-block:: bash
+
+    pip install came-domotic-unofficial
+
+Here's a quick example to show how simple it is to use:
+
+.. code-block:: python
+
+    from came_domotic_unofficial import CameETIDomoServer, EntityType, EntityStatus
+
+    # Just declare the server: login and session management are automatic
+    with CameETIDomoServer("192.168.0.3", "username", "password") as domo:
+        
+        # Get the list of all the lights configured on the CAME server
+        my_lights = domo.get_entities(EntityType.LIGHTS)
+
+        if my_lights:
+            # Get a specific light by display name
+            my_favourite_light = next(
+                (light for light in my_lights if light.name == "My favourite light"),
+                None
+            )
+            if my_favourite_light:
+                # Turn the light on
+                domo.set_entity_status(
+                    Light, my_favourite_light.id, EntityStatus.ON_OPEN_TRIGGERED
+                )
+
+For **more detailed usage examples**, see :doc:`usage_examples`.
+
+What's New
+----------
+To keep up with the latest improvements and updates, visit our 
+`GitHub Releases <https://github.com/CAME-Domotic-unofficial/came_domotic_unofficial/releases>`_
+page. The release notes are updated with each new version, ensuring you're always
+informed about new features and fixes.
+
+Contributing
+------------
+We welcome contributions! For guidelines on how to help, check out our
+:doc:`contributing`.
 
 Acknowledgments
 ---------------
+Special thanks to Andrea Michielan for his foundational work with the 
+`eti_domo <https://github.com/andrea-michielan/eti_domo>`_ library, which greatly
+facilitated the development of this library.
 
-Special thanks to Andrea Michielan for his
-`eti_domo <https://github.com/andrea-michielan/eti_domo>`__ library,
-which significantly facilitated the development process of this library.
-His work was very helpful and greatly appreciated.
-
-Disclaimer
-----------
-
-This library is not affiliated with or endorsed or supported by
-`CAME <https://www.came.com/>`__. Use at your own risk.
-
-**Important**: This library is currently in a pre-alpha development
-state. It is not yet stable and should be used only for studying
-purposes. Please be aware that you cannot rely on it for any production
-use. Use at your own risk.
+License
+-------
+This project is licensed under the Apache License 2.0. For more details, see the
+`LICENSE <https://github.com/CAME-Domotic-unofficial/came_domotic_unofficial/blob/main/LICENSE>`_
+file.
