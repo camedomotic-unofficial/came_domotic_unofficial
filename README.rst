@@ -44,15 +44,14 @@ Welcome!
 ..    :alt: Downloads
 
 
-.. Code Quality - A badge from services like Codacy, Code Climate, or SonarCloud that assesses the quality of your code based on various metrics. This can help indicate the maintainability and cleanliness of your code.
+.. Code Quality - A badge from services like Codacy, Code Climate, or SonarCloud that
+.. assesses the quality of your code based on various metrics. This can help indicate
+.. the maintainability and cleanliness of your code.
 
 
-.. Dependencies - Indicates the status of dependencies used by your project, possibly showing if any dependencies are out-of-date or have known vulnerabilities, using tools like Dependabot or Snyk.
-
-
-
-
-
+.. Dependencies - Indicates the status of dependencies used by your project, possibly
+.. showing if any dependencies are out-of-date or have known vulnerabilities, using
+.. tools like Dependabot or Snyk.
 
 The **CAME Domotic unofficial library** offers a streamlined Python interface for 
 interacting with CAME ETI/Domo servers. Designed for both **developers and home automation 
