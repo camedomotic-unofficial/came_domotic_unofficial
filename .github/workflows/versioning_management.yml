@@ -37,6 +37,7 @@ jobs:
       id: scm_version
       run: |
         COMPUTE_VERSION=$(python -c 'import setuptools_scm; print(setuptools_scm.get_version())')
+        echo "Computed version: $COMPUTE_VERSION"
         echo "COMPUTE_VERSION=$COMPUTE_VERSION" >> $GITHUB_ENV
         echo "GIT_TAG=$COMPUTE_VERSION" >> $GITHUB_ENV
 
