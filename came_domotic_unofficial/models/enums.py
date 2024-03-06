@@ -34,10 +34,8 @@ class EntityType(CameEnum):
     """
 
     FEATURES = "feature_list_req"
-    LIGHTS = "light_list_req"
-    # LIGHTS = "nested_light_list_req"
-    OPENINGS = "openings_list_req"
-    # OPENINGS = "nested_openings_list_req"
+    LIGHTS = "light_list_req"  # "nested_light_list_req"
+    OPENINGS = "openings_list_req"  # "nested_openings_list_req"
     DIGITALIN = "digitalin_list_req"
     SCENARIOS = "scenarios_list_req"
     # UPDATE = "status_update_req"
