@@ -125,7 +125,6 @@ class CameETIDomoServer:
         host (str): The host address of the server.
         username (str): The username for authentication.
         password (str): The password for authentication.
-        keep_alive (bool, optional=True): automatically keep the session alive
 
     Properties:
         is_authenticated (bool): True if the server is authenticated.
@@ -157,7 +156,7 @@ class CameETIDomoServer:
 
     # region Special methods
 
-    def __init__(self, host, username, password, *, keep_alive: bool = True):
+    def __init__(self, host, username, password):
 
         # Validate the input
         if not isinstance(host, str) or host == "":
@@ -177,18 +176,13 @@ class CameETIDomoServer:
         self._host_url = "http://" + host + "/domo/"
         self._username = username
         self._password = password
-        # self._httpclient = aiohttp.ClientSession()
 
         # Session attributes
         self._http_session = requests.Session()  # This is thread safe
         self._session_id = ""
         self._session_keep_alive_timeout_sec = 0
         self._session_expiration_timestamp = datetime(2000, 1, 1, tzinfo=timezone.utc)
-        self._keep_alive_required = (
-            keep_alive  # TODO If True, the server will keep the session alive
-        )
         self._cseq = 0  # The actual sequence starts from 1
-        # self._cseq_lock = asyncio.Lock()
 
         # Server attributes
         self._keycode = ""
@@ -560,9 +554,8 @@ class CameETIDomoServer:
         raise: Nothing, everything is managed internally.
         """
         try:
-            if self.is_authenticated:
-                if not self._logout():
-                    _LOGGER.warning("Logout failed.")
+            if self.is_authenticated and not self._logout():
+                _LOGGER.warning("Logout failed.")
             self._http_session.close()
             _LOGGER.debug("Resources disposed.")
         except Exception:  # pylint: disable=broad-exception-caught
@@ -728,9 +721,6 @@ status code: {response.status_code}"
             _LOGGER.info("New HTTP session created successfully.")
 
             raise CameDomoticRequestError from e
-
-    # def _start_keep_alive(self):
-    #     asyncio.create_task(self._keep_alive())
 
     @ensure_login
     def _fetch_features_list(self) -> dict:
@@ -912,7 +902,6 @@ status code: {response.status_code}"
                     e,
                     traceback.format_exc(),
                 )
-                # raise e
             except KeyError as e:
                 _LOGGER.error(
                     "Unexpected KeyError trying to get the entities for "
@@ -921,8 +910,6 @@ status code: {response.status_code}"
                     e,
                     traceback.format_exc(),
                 )
-            # raise CameDomoticRequestError("Unexpected KeyError trying to\
-            # get the entities for the feature {feature.name}") from e
             except Exception as e:  # pylint: disable=broad-exception-caught
                 _LOGGER.error(
                     "Unexpected error trying to get the entities for "
@@ -931,8 +918,6 @@ status code: {response.status_code}"
                     e,
                     traceback.format_exc(),
                 )
-        # raise CameDomoticRequestError("Unexpected error trying to \
-        # get the entities for the feature {feature.name}") from e
 
         return CameEntitySet()
 

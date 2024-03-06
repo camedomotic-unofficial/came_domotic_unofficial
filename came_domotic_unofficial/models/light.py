@@ -67,11 +67,12 @@ class Light(CameEntity):
         self._light_type = light_type
 
         # Set brightness, with range from 0 to 100
-        self._brightness = (
-            100
-            if brightness is None or brightness > 100
-            else 0 if brightness < 0 else brightness
-        )
+        if brightness is None or brightness > 100:
+            self._brightness = 100
+        elif brightness < 0:
+            self._brightness = 0
+        else:
+            self._brightness = brightness
 
         super().__init__(
             entity_id,

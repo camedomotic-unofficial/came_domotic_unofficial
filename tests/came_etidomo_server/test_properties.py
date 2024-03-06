@@ -49,7 +49,7 @@ public_properties = {
 @patch("requests.Session.get", side_effect=mock_get_init)
 @pytest.mark.parametrize("property_name, expected_value", public_properties.items())
 def test_properties_already_retrieved(mock_get, property_name, expected_value):
-    server = CameETIDomoServer("192.168.0.3", "user", "password")
+    server = CameETIDomoServer("192.168.x.x", "user", "password")
 
     # Manually set session attributes to emulate the authentication
     server._session_id = "my_session_id"
@@ -74,13 +74,11 @@ def test_properties_already_retrieved(mock_get, property_name, expected_value):
 @patch("requests.Session.post", side_effect=mock_post_method)
 @pytest.mark.parametrize("property_name, expected_value", public_properties.items())
 def test_properties_not_retrieved(mock_post, mock_get, property_name, expected_value):
-    server = CameETIDomoServer("192.168.0.3", "user", "password")
+    server = CameETIDomoServer("192.168.x.x", "user", "password")
     server.dispose = lambda: None  # type: ignore
 
     if property_name == "is_authenticated":
-        assert (
-            getattr(server, property_name) == False
-        )  # Now we're not yet authenticated
+        assert getattr(server, property_name) is False  # We're not yet authenticated
     else:
         assert getattr(server, property_name) == expected_value
 
@@ -91,11 +89,11 @@ def test_properties_not_retrieved(mock_post, mock_get, property_name, expected_v
 def test_properties_not_retrieved_request_error(
     mock_post, mock_get, property_name, expected_value
 ):
-    server = CameETIDomoServer("192.168.0.3", "user", "password")
+    server = CameETIDomoServer("192.168.x.x", "user", "password")
     server.dispose = lambda: None  # type: ignore
 
     if property_name == "is_authenticated":
-        assert getattr(server, property_name) == False
+        assert getattr(server, property_name) is False
     else:
         with pytest.raises(CameDomoticRequestError):
-            assert getattr(server, property_name) == expected_value
+            getattr(server, property_name)
