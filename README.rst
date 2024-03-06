@@ -19,9 +19,9 @@ Welcome!
    :target: https://pypi.org/project/came_domotic_unofficial/
    :alt: PyPI version
 
-.. image:: https://github.com/CAME-Domotic-unofficial/came_domotic_unofficial/actions/workflows/check_code.yml/badge.svg?branch=main
-   :target: https://github.com/CAME-Domotic-unofficial/came_domotic_unofficial/actions/workflows/check_code.yml?branch=main
-   :alt: Build status
+.. .. image:: https://github.com/CAME-Domotic-unofficial/came_domotic_unofficial/actions/workflows/check_code.yml/badge.svg?branch=main
+..    :target: https://github.com/CAME-Domotic-unofficial/came_domotic_unofficial/actions/workflows/check_code.yml?branch=main
+..    :alt: Build status
 
 .. image:: https://codecov.io/gh/camedomotic-unofficial/came_domotic_unofficial/graph/badge.svg?token=0QSJYP7EP3 
    :target: https://codecov.io/gh/camedomotic-unofficial/came_domotic_unofficial
@@ -119,7 +119,8 @@ Here's a quick example to show how simple it is to use:
                     Light, my_favourite_light.id, EntityStatus.ON_OPEN_TRIGGERED
                 )
 
-For **more detailed usage examples**, see :doc:`usage_examples`.
+For **more detailed usage examples**, see 
+`Usage examples <https://came-domotic-unofficial.readthedocs.io/en/latest/usage_examples.html>`_.
 
 What's New
 ----------
@@ -130,8 +131,8 @@ informed about new features and fixes.
 
 Contributing
 ------------
-We welcome contributions! For guidelines on how to help, check out our
-:doc:`contributing`.
+We welcome contributions! For guidelines on how to help, see
+`Contribute to the Project <https://came-domotic-unofficial.readthedocs.io/en/latest/contributing.html>`_.
 
 Acknowledgments
 ---------------
