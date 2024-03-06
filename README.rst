@@ -39,6 +39,10 @@ Welcome!
    :target: https://opensource.org/licenses/Apache-2.0
    :alt: License: Apache 2.0
 
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://github.com/psf/black
+   :alt: Code style: black
+
 .. .. image:: https://pepy.tech/badge/came_domotic_unofficial
 ..    :target: https://pepy.tech/project/came_domotic_unofficial
 ..    :alt: Downloads
