@@ -77,8 +77,3 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-    - name: Automated Code Review (if scheduled)
-      if: github.event_name == 'schedule'
-      run: # Tool command for automated code review
-
