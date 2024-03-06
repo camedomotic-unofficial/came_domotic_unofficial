@@ -32,11 +32,11 @@ jobs:
     environment: test
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.x
-      uses: actions/setup-python@v3
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
       with:
-        python-version: "3.x"
+        python-version: "3.12"
     - name: Install all dependencies
       run: |
         python -m pip install --upgrade pip
@@ -52,11 +52,11 @@ jobs:
     environment: test
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.x
-      uses: actions/setup-python@v3
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
       with:
-        python-version: "3.x"
+        python-version: "3.12"
     - name: Install all dependencies
       run: |
         python -m pip install --upgrade pip
@@ -66,16 +66,15 @@ jobs:
   mypy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.12'
           cache: pip
       - name: Install project dependencies
         run: |
           python -m pip install --upgrade pip
-          # pip install .
           pip install mypy types-requests
       - name: Test with mypy
         run: |
@@ -88,9 +87,9 @@ jobs:
         python-version: ["3.12","3.13"]
       fail-fast: false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true

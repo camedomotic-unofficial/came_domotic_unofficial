@@ -59,17 +59,3 @@ jobs:
     - name: Build documentation with Sphinx
       run: |
         sphinx-build -b html docs/source/ docs/build/html
-      continue-on-error: false
-
-      
-
-#   push-to-rtd:
-#     needs: build-docs
-#     runs-on: ubuntu-latest
-#     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-#     steps:
-#       - name: Trigger ReadTheDocs Build
-#         run: |
-#             curl -X POST -d "branches=main" -d "token=${{ secrets.RTD_TOKEN }}" https://readthedocs.org/api/v2/webhook/myproject/999999/
-#         env:
-#             RTD_TOKEN: ${{ secrets.RTD_TOKEN }}
