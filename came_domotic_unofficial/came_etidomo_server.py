@@ -725,9 +725,6 @@ status code: {response.status_code}"
 
             raise CameDomoticRequestError from e
 
-    # def _start_keep_alive(self):
-    #     asyncio.create_task(self._keep_alive())
-
     @ensure_login
     def _fetch_features_list(self) -> dict:
 
@@ -908,7 +905,6 @@ status code: {response.status_code}"
                     e,
                     traceback.format_exc(),
                 )
-                # raise e
             except KeyError as e:
                 _LOGGER.error(
                     "Unexpected KeyError trying to get the entities for "
@@ -917,8 +913,6 @@ status code: {response.status_code}"
                     e,
                     traceback.format_exc(),
                 )
-            # raise CameDomoticRequestError("Unexpected KeyError trying to\
-            # get the entities for the feature {feature.name}") from e
             except Exception as e:  # pylint: disable=broad-exception-caught
                 _LOGGER.error(
                     "Unexpected error trying to get the entities for "
@@ -927,8 +921,6 @@ status code: {response.status_code}"
                     e,
                     traceback.format_exc(),
                 )
-        # raise CameDomoticRequestError("Unexpected error trying to \
-        # get the entities for the feature {feature.name}") from e
 
         return CameEntitySet()
 
