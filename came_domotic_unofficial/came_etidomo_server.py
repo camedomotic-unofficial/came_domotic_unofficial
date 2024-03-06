@@ -125,7 +125,6 @@ class CameETIDomoServer:
         host (str): The host address of the server.
         username (str): The username for authentication.
         password (str): The password for authentication.
-        keep_alive (bool, optional=True): automatically keep the session alive
 
     Properties:
         is_authenticated (bool): True if the server is authenticated.
@@ -157,7 +156,7 @@ class CameETIDomoServer:
 
     # region Special methods
 
-    def __init__(self, host, username, password, *, keep_alive: bool = True):
+    def __init__(self, host, username, password):
 
         # Validate the input
         if not isinstance(host, str) or host == "":
@@ -177,7 +176,6 @@ class CameETIDomoServer:
         self._host_url = "http://" + host + "/domo/"
         self._username = username
         self._password = password
-        # self._httpclient = aiohttp.ClientSession()
 
         # Session attributes
         self._http_session = requests.Session()  # This is thread safe
@@ -188,7 +186,6 @@ class CameETIDomoServer:
             keep_alive  # TODO If True, the server will keep the session alive
         )
         self._cseq = 0  # The actual sequence starts from 1
-        # self._cseq_lock = asyncio.Lock()
 
         # Server attributes
         self._keycode = ""
@@ -560,9 +557,8 @@ class CameETIDomoServer:
         raise: Nothing, everything is managed internally.
         """
         try:
-            if self.is_authenticated:
-                if not self._logout():
-                    _LOGGER.warning("Logout failed.")
+            if self.is_authenticated and not self._logout():
+                _LOGGER.warning("Logout failed.")
             self._http_session.close()
             _LOGGER.debug("Resources disposed.")
         except Exception:  # pylint: disable=broad-exception-caught
