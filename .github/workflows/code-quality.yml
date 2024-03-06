@@ -43,6 +43,8 @@ jobs:
     steps:
     - name: Check out repository
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -70,8 +72,11 @@ jobs:
       run: mypy .
     #   run: mypy came_domotic_unofficial
 
-    - name: Code Duplication Analysis
-      run: # Tool command for code duplication
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
     - name: Automated Code Review (if scheduled)
       if: github.event_name == 'schedule'
