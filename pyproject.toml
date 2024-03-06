@@ -50,7 +50,7 @@ dependencies = ["requests"]
 
 [project.urls]
 Homepage = "https://github.com/camedomotic-unofficial/came_domotic_unofficial"
-Documentation = "https://came_domotic_unofficial.readthedocs.io/en/latest/"
+Documentation = "https://came-domotic-unofficial.readthedocs.io/en/latest/index.html"
 Issues = "https://github.com/camedomotic-unofficial/came_domotic_unofficial"
 Repository = "https://github.com/camedomotic-unofficial/came_domotic_unofficial.git"
 
