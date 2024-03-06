@@ -130,9 +130,7 @@ def test_came_entity_str(entity_id, name, status: EntityStatus):
     """
     entity = CameEntity(entity_id, name, status=status)
 
-    assert str(entity) == (
-        f"CameEntity #{entity_id}: {name} - Status: " f"{status.name}"
-    )
+    assert str(entity) == (f"CameEntity #{entity_id}: {name} - Status: {status.name}")
 
 
 @given(

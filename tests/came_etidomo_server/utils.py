@@ -102,12 +102,12 @@ def mock_post_method(*args, **kwargs):
         request_data = json.loads(kwargs["json"]["command"])
 
     if request_data:
-        came_cmd_name = (
-            request_data["sl_appl_msg"]["cmd_name"]
-            if "sl_appl_msg" in request_data
-            and "cmd_name" in request_data["sl_appl_msg"]
-            else request_data["sl_cmd"] if "sl_cmd" in request_data else None
-        )
+        if "sl_appl_msg" in request_data and "cmd_name" in request_data["sl_appl_msg"]:
+            came_cmd_name = request_data["sl_appl_msg"]["cmd_name"]
+        elif "sl_cmd" in request_data:
+            came_cmd_name = request_data["sl_cmd"]
+        else:
+            came_cmd_name = None
 
     if came_cmd_name:
         # Using copy.deepcopy to enable playing on the response object
@@ -131,15 +131,16 @@ def mock_post_method_error_auth(*args, **kwargs):
     """
     mock_response = mock_post_method(*args, **kwargs)
     response_data = mock_response.json.return_value
-    sl_cmd = (
-        None
-        if not response_data
-        else (
-            response_data["sl_cmd"]
-            if "sl_cmd" in response_data
-            else (response_data["cmd_name"] if "cmd_name" in response_data else None)
-        )
-    )
+
+    if not response_data:
+        sl_cmd = None
+    elif "sl_cmd" in response_data:
+        sl_cmd = response_data["sl_cmd"]
+    elif "cmd_name" in response_data:
+        sl_cmd = response_data["cmd_name"]
+    else:
+        sl_cmd = None
+
     if sl_cmd == "sl_registration_ack":
         mock_response.status_code = 403
 
@@ -153,15 +154,16 @@ def mock_post_method_error_non_auth(*args, **kwargs):
     """
     mock_response = mock_post_method(*args, **kwargs)
     response_data = mock_response.json.return_value
-    sl_cmd = (
-        None
-        if not response_data
-        else (
-            response_data["sl_cmd"]
-            if "sl_cmd" in response_data
-            else (response_data["cmd_name"] if "cmd_name" in response_data else None)
-        )
-    )
+
+    if not response_data:
+        sl_cmd = None
+    elif "sl_cmd" in response_data:
+        sl_cmd = response_data["sl_cmd"]
+    elif "cmd_name" in response_data:
+        sl_cmd = response_data["cmd_name"]
+    else:
+        sl_cmd = None
+
     if sl_cmd != "sl_registration_ack":
         mock_response.status_code = 500
 

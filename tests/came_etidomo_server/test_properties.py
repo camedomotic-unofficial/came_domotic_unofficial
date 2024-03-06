@@ -78,9 +78,7 @@ def test_properties_not_retrieved(mock_post, mock_get, property_name, expected_v
     server.dispose = lambda: None  # type: ignore
 
     if property_name == "is_authenticated":
-        assert (
-            getattr(server, property_name) == False
-        )  # Now we're not yet authenticated
+        assert getattr(server, property_name) is False  # We're not yet authenticated
     else:
         assert getattr(server, property_name) == expected_value
 

@@ -182,9 +182,6 @@ class CameETIDomoServer:
         self._session_id = ""
         self._session_keep_alive_timeout_sec = 0
         self._session_expiration_timestamp = datetime(2000, 1, 1, tzinfo=timezone.utc)
-        self._keep_alive_required = (
-            keep_alive  # TODO If True, the server will keep the session alive
-        )
         self._cseq = 0  # The actual sequence starts from 1
 
         # Server attributes
