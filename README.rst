@@ -102,7 +102,7 @@ Here's a quick example to show how simple it is to use:
     from came_domotic_unofficial import CameETIDomoServer, EntityType, EntityStatus
 
     # Just declare the server: login and session management are automatic
-    with CameETIDomoServer("192.168.0.3", "username", "password") as domo:
+    with CameETIDomoServer("192.168.x.x", "username", "password") as domo:
         
         # Get the list of all the lights configured on the CAME server
         my_lights = domo.get_entities(EntityType.LIGHTS)

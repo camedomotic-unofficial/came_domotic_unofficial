@@ -39,7 +39,7 @@ def mocked_server(mock_get) -> CameETIDomoServer:
     """
     Fixture that provides an authenticated instance of CameETIDomoServer.
     """
-    server = CameETIDomoServer("192.168.0.3", "user", "password")
+    server = CameETIDomoServer("192.168.x.x", "user", "password")
     server.dispose = lambda: None  # type: ignore
     return server
 
@@ -47,8 +47,8 @@ def mocked_server(mock_get) -> CameETIDomoServer:
 @patch("requests.Session.get")
 def test_init_with_valid_input(mock_get):
     mock_get.return_value.status_code = 200
-    server = CameETIDomoServer("192.168.0.3", "user", "password")
-    assert server._host == "192.168.0.3"
+    server = CameETIDomoServer("192.168.x.x", "user", "password")
+    assert server._host == "192.168.x.x"
     assert server._username == "user"
     assert server._password == "password"
 
@@ -65,26 +65,26 @@ def test_init_with_non_string_host():
 
 def test_init_with_non_string_username():
     with pytest.raises(TypeError):
-        CameETIDomoServer("192.168.0.3", 123, "password")
+        CameETIDomoServer("192.168.x.x", 123, "password")
 
 
 def test_init_with_non_string_password():
     with pytest.raises(TypeError):
-        CameETIDomoServer("192.168.0.3", "user", 123)
+        CameETIDomoServer("192.168.x.x", "user", 123)
 
 
 @patch("requests.Session.get")
 def test_init_with_unavailable_server(mock_get):
     mock_get.return_value.status_code = 404
     with pytest.raises(CameDomoticServerNotFoundError):
-        CameETIDomoServer("192.168.0.3", "user", "password")
+        CameETIDomoServer("192.168.x.x", "user", "password")
 
 
 @patch("requests.Session.get")
 def test_init_with_request_exception(mock_get):
     mock_get.side_effect = requests.exceptions.RequestException("Request error")
     with pytest.raises(CameDomoticServerNotFoundError):
-        CameETIDomoServer("192.168.0.3", "user", "password")
+        CameETIDomoServer("192.168.x.x", "user", "password")
 
 
 def test_context_manager_entering(mocked_server):
@@ -100,7 +100,7 @@ def test_context_manager_entering(mocked_server):
 @patch.object(CameETIDomoServer, "dispose")
 def test_context_manager_exit_dispose(mock_dispose, mock_get):
     """Test that leaving a 'with' construct the 'dispose' method is called."""
-    server = CameETIDomoServer("192.168.0.3", "user", "password")
+    server = CameETIDomoServer("192.168.x.x", "user", "password")
 
     with server:
         pass
@@ -114,7 +114,7 @@ def test_context_manager_exit_dispose_with_exception(mock_dispose, mock_get):
     Test that leaving a 'with' construct with an exception the 'dispose' method
     is called.
     """
-    server = CameETIDomoServer("192.168.0.3", "user", "password")
+    server = CameETIDomoServer("192.168.x.x", "user", "password")
     try:
         with server:
             raise Exception("Test exception")
@@ -129,7 +129,7 @@ def test_garbage_collector_calls_dispose(mock_dispose, mock_get):
     """
     Test that the __del__ method calls the dispose method.
     """
-    server = CameETIDomoServer("192.168.0.3", "user", "password")
+    server = CameETIDomoServer("192.168.x.x", "user", "password")
 
     # Force the garbage collector to call the __del__ method
     del server

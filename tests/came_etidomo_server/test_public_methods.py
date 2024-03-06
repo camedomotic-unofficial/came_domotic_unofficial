@@ -64,7 +64,7 @@ def mocked_server_auth(mock_get) -> CameETIDomoServer:
     """
     Fixture that provides an authenticated instance of CameETIDomoServer.
     """
-    server = CameETIDomoServer("192.168.0.3", "user", "password")
+    server = CameETIDomoServer("192.168.x.x", "user", "password")
     # Override the dispose() method to avoid calling the remote server
     server.dispose = lambda: None  # type: ignore # pylint: disable=pointless-statement
 
@@ -483,7 +483,7 @@ def test_dispose_close_http_session(mock_close, mock_get):
     """
     Test that the dispose method closes the http session.
     """
-    server = CameETIDomoServer("192.168.0.3", "user", "password")
+    server = CameETIDomoServer("192.168.x.x", "user", "password")
 
     # Call the dispose method
     server.dispose()
@@ -498,7 +498,7 @@ def test_dispose_post_with_exception(mock_close, mock_post, mock_get):
     Test that the dispose method closes the http session even if an exception is raised
     while sending the logout POST request.
     """
-    server = CameETIDomoServer("192.168.0.3", "user", "password")
+    server = CameETIDomoServer("192.168.x.x", "user", "password")
     server._session_id = "my_session_id"
     server._session_expiration_timestamp = datetime(3000, 1, 1, tzinfo=timezone.utc)
 
@@ -517,7 +517,7 @@ def test_dispose_post_request(mock_post, mock_get):
     Test that the dispose method sends a POST request to the server
     and that the request is compliant with the CAME server interface.
     """
-    server = CameETIDomoServer("192.168.0.3", "user", "password")
+    server = CameETIDomoServer("192.168.x.x", "user", "password")
     server._session_id = "my_session_id"
     server._session_expiration_timestamp = datetime(3000, 1, 1, tzinfo=timezone.utc)
 
