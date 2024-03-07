@@ -67,6 +67,7 @@ jobs:
 
     - name: Check formatting with black
       run: black . --check
+      # uses: psf/black@stable
 
     - name: Run mypy
       run: mypy .

@@ -28,57 +28,6 @@ permissions:
   contents: read
 
 jobs:
-  flake8:
-    environment: test
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.12"
-    - name: Install all dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The Black formatter uses 88 chars wide lines and conflicts whit E203
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics --extend-ignore=E203
-
-  black:
-    environment: test
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.12"
-    - name: Install all dependencies
-      run: |
-        python -m pip install --upgrade pip
-    - name: Run Black formatter
-      uses: psf/black@stable
-
-  mypy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: pip
-      - name: Install project dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install mypy types-requests
-      - name: Test with mypy
-        run: |
-          mypy came_domotic_unofficial
 
   pytest:
     runs-on: ubuntu-latest
