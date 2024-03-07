@@ -12,20 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License. 
 
-[build-system]
-requires = ["setuptools>=64", "setuptools_scm>=8"]
-build-backend = "setuptools.build_meta"
-
-[project]
+[tool.poetry]
 name = "came_domotic_unofficial"
-dynamic = ["version"]
-description = "Library to interact with a CAME ETI/Domo domotic server"
-authors = [
-    { name = "camedomotic-unofficial", email = "camedomotic-unofficial@gmail.com" },
-]
-maintainers = [
-    { name = "camedomotic-unofficial", email = "camedomotic-unofficial@gmail.com" },
-]
+version = "1.0.0rc3-post1"
+description = "Python library to interact with a CAME ETI/Domo domotic server."
+license = "Apache-2.0"
+authors = ["camedomotic-unofficial <camedomotic-unofficial@gmail.com>"]
+maintainers = ["camedomotic-unofficial <camedomotic-unofficial@gmail.com>"]
+readme = "README.rst"
+
+homepage = "https://github.com/camedomotic-unofficial/came_domotic_unofficial"
+repository = "https://github.com/camedomotic-unofficial/came_domotic_unofficial.git"
+documentation = "https://came-domotic-unofficial.readthedocs.io/en/latest/index.html"
+
 keywords = [
     "CAME",
     "ETI/Domo",
@@ -34,29 +33,40 @@ keywords = [
     "home assistant",
     "home-assistant",
 ]
-readme = "README.rst"
-license = { file = "LICENSE" }
-
-requires-python = ">=3.12"
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Home Automation",
+    "Topic :: Software Development :: Libraries :: Python Modules",
     "Operating System :: OS Independent",
 ]
-dependencies = ["requests"]
 
-[project.urls]
-Homepage = "https://github.com/camedomotic-unofficial/came_domotic_unofficial"
-Documentation = "https://came-domotic-unofficial.readthedocs.io/en/latest/index.html"
-Issues = "https://github.com/camedomotic-unofficial/came_domotic_unofficial"
-Repository = "https://github.com/camedomotic-unofficial/came_domotic_unofficial.git"
+packages = [{ include = "came_domotic_unofficial" }]
 
+[tool.poetry.urls]
+"Bug tracker" = "https://github.com/camedomotic-unofficial/came_domotic_unofficial/issues"
 
-[tool.setuptools_scm]
-version_file = "came_domotic_unofficial/_version.py"
+[tool.poetry.dependencies]
+python = '^3.12'
+requests = '^2.31.0'
+
+[tool.poetry.group.test.dependencies]
+freezegun = '^1.4.0'
+hypothesis = '^6.98.17'
+pytest = '^8.0.0'
+pytest-timeout = '^2.2.0'
+
+[tool.poetry.group.docs.dependencies]
+readthedocs-sphinx-search = "^0.3.2"
+sphinx = "^7.2.6"
+sphinx_rtd_theme = "^2.0.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 addopts = "--timeout=10"

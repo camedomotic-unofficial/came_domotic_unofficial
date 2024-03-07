@@ -1,0 +1,58 @@
+name: Python Unit Testing and Coverage Reporting
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'came_domotic_unofficial/**/*.py'
+      - 'tests/**/*.py'
+      - 'requirements.txt'
+      - 'pyproject.toml'
+      - 'setup.py'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'came_domotic_unofficial/**/*.py'
+      - 'tests/**/*.py'
+      - 'requirements.txt'
+      - 'pyproject.toml'
+      - 'setup.py'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.12', '3.13']
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        allow-prereleases: true
+        cache: pip
+
+    - name: Install dependencies
+    # pip install -r requirements.txt
+      run: |
+        python -m pip install --upgrade pip
+        pip install freezegun, hypothesis, pytest, pytest-timeout, pytest-cov
+        
+    - name: Install the package
+      run: pip install -e .
+
+    - name: Run pytest with coverage
+      run: pytest --timeout 10 --cov=came_domotic_unofficial --cov-report xml --cov-report term-missing
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        name: "pytest-${{ matrix.python-version }}"
+        flags: "pytest-coverage,python-${{ matrix.python-version }}"
+        fail_ci_if_error: false
+        file: ./coverage.xml

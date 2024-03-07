@@ -12,6 +12,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.  -->
 
+![Code quality checks](https://github.com/camedomotic-unofficial/came_domotic_unofficial/actions/workflows/code-quality.yml/badge.svg)
+![Code formatter: black](https://img.shields.io/badge/code%20style-black-000000.svg)
+[![Linter: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/pylint-dev/pylint)
+![Type checker: mypy](https://img.shields.io/badge/type%20checking-mypy-yellowgreen.svg)
+![Security: Bandit](https://img.shields.io/badge/security-bandit-0cc.svg)
+![Unit testing: pytest](https://img.shields.io/badge/testing-pytest-0A0.svg)
+[![Code coverage: codecov](https://codecov.io/gh/camedomotic-unofficial/came_domotic_unofficial/graph/badge.svg?token=0QSJYP7EP3)](https://codecov.io/gh/camedomotic-unofficial/came_domotic_unofficial)
+[![SonarCloud - Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=camedomotic-unofficial_came_domotic_unofficial&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=camedomotic-unofficial_came_domotic_unofficial)
+[![SonarCloud - Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=camedomotic-unofficial_came_domotic_unofficial&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=camedomotic-unofficial_came_domotic_unofficial)
+
 # Contributing to Our Project
 
 Thank you for your interest in contributing to our project! We welcome contributions from everyone. This document provides some guidelines for contributing.
