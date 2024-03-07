@@ -12,36 +12,73 @@
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
 
-Welcome!
-========
-
 .. image:: https://badge.fury.io/py/came_domotic_unofficial.svg
    :target: https://pypi.org/project/came_domotic_unofficial/
    :alt: PyPI version
-
-.. .. image:: https://github.com/CAME-Domotic-unofficial/came_domotic_unofficial/actions/workflows/check_code.yml/badge.svg?branch=main
-..    :target: https://github.com/CAME-Domotic-unofficial/came_domotic_unofficial/actions/workflows/check_code.yml?branch=main
-..    :alt: Build status
-
-.. image:: https://codecov.io/gh/camedomotic-unofficial/came_domotic_unofficial/graph/badge.svg?token=0QSJYP7EP3 
-   :target: https://codecov.io/gh/camedomotic-unofficial/came_domotic_unofficial
-   :alt: Code coverage
-
-.. image:: https://readthedocs.org/projects/came-domotic-unofficial/badge/?version=latest
-   :target: https://came-domotic-unofficial.readthedocs.io/en/latest/?badge=latest
-   :alt: Documentation status
 
 .. image:: https://img.shields.io/badge/python-3.12%20|%203.13-blue.svg
     :target: https://python.org
     :alt: Python 3.12 | 3.13
 
-.. image:: https://img.shields.io/badge/license-Apache%202.0-blue.svg
-   :target: https://opensource.org/licenses/Apache-2.0
-   :alt: License: Apache 2.0
+.. image:: https://sonarcloud.io/api/project_badges/measure?project=camedomotic-unofficial_came_domotic_unofficial&metric=security_rating
+   :target: https://sonarcloud.io/project/overview?id=camedomotic-unofficial_came_domotic_unofficial
+   :alt: SonarCloud - Security Rating
 
-.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
-   :target: https://github.com/psf/black
-   :alt: Code style: black
+.. image:: https://sonarcloud.io/api/project_badges/measure?project=camedomotic-unofficial_came_domotic_unofficial&metric=sqale_rating
+   :target: https://sonarcloud.io/project/overview?id=camedomotic-unofficial_came_domotic_unofficial
+   :alt: SonarCloud - Maintainability Rating
+
+.. image:: https://codecov.io/gh/camedomotic-unofficial/came_domotic_unofficial/graph/badge.svg?token=0QSJYP7EP3 
+   :target: https://codecov.io/gh/camedomotic-unofficial/came_domotic_unofficial
+   :alt: Code coverage
+
+.. image:: https://sonarcloud.io/api/project_badges/measure?project=camedomotic-unofficial_came_domotic_unofficial&metric=vulnerabilities
+   :target: https://sonarcloud.io/project/overview?id=camedomotic-unofficial_came_domotic_unofficial
+   :alt: SonarCloud - Vulnerabilities
+
+.. image:: https://sonarcloud.io/api/project_badges/measure?project=camedomotic-unofficial_came_domotic_unofficial&metric=bugs
+   :target: https://sonarcloud.io/project/overview?id=camedomotic-unofficial_came_domotic_unofficial
+   :alt: SonarCloud - Bugs
+
+.. image:: https://readthedocs.org/projects/came-domotic-unofficial/badge/?version=latest
+   :target: https://came-domotic-unofficial.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation status
+
+.. .. image:: https://github.com/CAME-Domotic-unofficial/came_domotic_unofficial/actions/workflows/check_code.yml/badge.svg?branch=main
+..    :target: https://github.com/CAME-Domotic-unofficial/came_domotic_unofficial/actions/workflows/check_code.yml?branch=main
+..    :alt: Build status
+
+.. .. image:: https://img.shields.io/badge/license-Apache%202.0-blue.svg
+..    :target: https://opensource.org/licenses/Apache-2.0
+..    :alt: License: Apache 2.0
+
+.. .. image:: https://sonarcloud.io/api/project_badges/measure?project=camedomotic-unofficial_came_domotic_unofficial&metric=alert_status
+..    :target: https://sonarcloud.io/project/overview?id=camedomotic-unofficial_came_domotic_unofficial
+..    :alt: SonarCloud - Quality Gate Status
+
+.. .. image:: https://img.shields.io/badge/typed-mypy-blue.svg
+..    :target: http://mypy-lang.org/
+..    :alt: Typed: mypy
+
+.. .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+..    :target: https://github.com/psf/black
+..    :alt: Code style: black
+
+.. .. image:: https://img.shields.io/badge/code%20style-flake8-green.svg
+..    :target: https://flake8.pycqa.org/
+..    :alt: Code style: flake8
+
+.. .. image:: https://sonarcloud.io/api/project_badges/measure?project=camedomotic-unofficial_came_domotic_unofficial&metric=duplicated_lines_density
+..    :target: https://sonarcloud.io/project/overview?id=camedomotic-unofficial_came_domotic_unofficial
+..    :alt: SonarCloud - Duplicated Lines (%)
+
+.. .. image:: https://sonarcloud.io/api/project_badges/measure?project=camedomotic-unofficial_came_domotic_unofficial&metric=reliability_rating
+..    :target: https://sonarcloud.io/project/overview?id=camedomotic-unofficial_came_domotic_unofficial
+..    :alt: SonarCloud - Reliability Rating
+
+.. .. image:: https://sonarcloud.io/api/project_badges/measure?project=camedomotic-unofficial_came_domotic_unofficial&metric=sqale_index
+..    :target: https://sonarcloud.io/project/overview?id=camedomotic-unofficial_came_domotic_unofficial
+..    :alt: SonarCloud - Technical Debt
 
 .. .. image:: https://pepy.tech/badge/came_domotic_unofficial
 ..    :target: https://pepy.tech/project/came_domotic_unofficial
@@ -56,6 +93,10 @@ Welcome!
 .. Dependencies - Indicates the status of dependencies used by your project, possibly
 .. showing if any dependencies are out-of-date or have known vulnerabilities, using
 .. tools like Dependabot or Snyk.
+
+Welcome!
+========
+
 
 The **CAME Domotic unofficial library** offers a streamlined Python interface for 
 interacting with CAME ETI/Domo servers. Designed for both **developers and home automation 
