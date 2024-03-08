@@ -109,7 +109,7 @@ like **lights**, **openings**, and **scenarios** straightforward and accessible,
 enabling broader integration possibilities for domotic systems.
 
 .. warning:: 
-    This library is currently in a **pre-alpha development state**.
+    This library is currently in **beta development status**.
     It is not yet stable and should be used only for studying purposes.
     Please be aware that you cannot rely on it for any production use.
     Use at your own risk.

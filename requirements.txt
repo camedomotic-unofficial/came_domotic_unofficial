@@ -1,0 +1,4 @@
+freezegun==1.4.0
+hypothesis==6.98.2
+pytest==8.0.0
+requests==2.31.0
