@@ -23,7 +23,8 @@ on:
       - '.flake8'
       - 'mypy.ini'
       - 'requirements.txt'
-  pull_request:
+      - '.github/workflows/code-quality.yml'
+      pull_request:
     branches: [main]
     paths:
       - '**.py'
@@ -31,7 +32,8 @@ on:
       - '.flake8'
       - 'mypy.ini'
       - 'requirements.txt'
-  schedule:
+      - '.github/workflows/code-quality.yml'
+      schedule:
     # At 06:30 on day-of-month 24.
     - cron: '30 6 24 * *'
   workflow_dispatch:
