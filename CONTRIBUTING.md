@@ -30,7 +30,8 @@ Thank you for your interest in contributing to our project! We welcome contribut
 
 We use 4 spaces for indentation. Our code is formatted with [Black](https://black.readthedocs.io/en/stable/), linted with [Pylint](https://www.pylint.org/), and type-checked with [Mypy](http://mypy-lang.org/). We write tests with [pytest](https://docs.pytest.org/en/latest/).
 
-Before submitting a pull request, please make sure your code is formatted, linted, type-checked, and all tests pass.
+Before submitting a pull request, please make sure your code is formatted, linted,
+type-checked, and all tests pass.
 
 ## Branch Naming Convention
 
@@ -48,23 +49,70 @@ To allow proper autolabeling of changes, please name your branches as follows:
 1. Fork the repository and create your branch from `main`.
 2. If you've added code, add tests. Make sure all tests pass.
 3. If you've changed the public interface of this library, update the documentation.
-4. Ensure your code is formatted with Black, linted with Pylint, and type-checked with Mypy.
+4. Ensure your code is formatted with Black, linted with Pylint, and type-checked with
+   Mypy.
 5. Issue your pull request!
 
 ## Reporting a Bug
 
-We use GitHub issues to track bugs. Report a bug by [opening a new issue](https://github.com/camedomotic-unofficial/came_domotic_unofficial/issues); it's that easy!
+We use GitHub issues to track bugs. Report a bug by
+[opening a new issue](https://github.com/camedomotic-unofficial/came_domotic_unofficial/issues;
+it's that easy!
+
+## Versioning Strategy
+
+Our project adheres to [Semantic Versioning (SemVer)](https://semver.org/) to ensure
+clarity and predictability in our release process. Our version numbers are structured as
+MAJOR.MINOR.PATCH, where we increment:
+
+- The MAJOR version when we make incompatible API changes,
+- The MINOR version when we add functionality in a backward-compatible manner, and
+- The PATCH version when we make backward-compatible bug fixes.
+
+### Post Releases
+
+In addition to the standard SemVer approach, we utilize post-release versions to address
+immediate issues or minor changes that do not warrant a full version increment. A
+post-release version is denoted as `1.2.3post1`, where `1.2.3` is the base version, and
+`post1` indicates the first post-release iteration.
+
+### Automation and Maintenance
+
+To maintain this versioning strategy efficiently and reduce human error, we leverage
+automation tools and workflows:
+
+- **Automated Version Bumps**: Our CI/CD pipeline includes steps to automatically
+- determine the appropriate version bump (major, minor, or patch) based on the commit
+- messages and merge requests guidelines.
+- **Manual Overrides for Post Releases**: When a post-release version is required, a
+- project maintainer will manually increment the post-release version. This process is
+- documented and controlled to ensure clarity and consistency.
+- **Tagging and Releases**: Each release is automatically tagged in our version control
+- system with the corresponding version number. This tag triggers a deployment pipeline
+- that publishes the release to the relevant package registries.
+
+### Contributing
+
+Contributors are encouraged to follow our commit message guidelines, which support our
+automated version bumping system. For substantial changes that might impact the API or
+introduce new features, we recommend opening an issue for discussion before starting
+work. This approach ensures that changes align with the project's direction and
+versioning strategy.
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the same license as the project.
+By contributing, you agree that your contributions will be licensed under the same
+license as the project.
 
 ## Code of Conduct
 
-In the interest of fostering an open and welcoming environment, we as contributors and maintainers pledge to making participation in our project and our community a harassment-free experience for everyone. Please refer to our [Code of Conduct](CODE_OF_CONDUCT.md) for details.
+In the interest of fostering an open and welcoming environment, we as contributors and
+maintainers pledge to making participation in our project and our community a
+harassment-free experience for everyone. Please refer to our
+[Code of Conduct](CODE_OF_CONDUCT.md) for details.
 
 ## Contact
 
 If you have any questions or concerns, please feel free to contact the maintainers.
 
-Thank you for contributing!
+Thank you for contributing! ❤️
