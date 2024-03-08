@@ -58,6 +58,13 @@ freezegun = '^1.4.0'
 hypothesis = '^6.98.17'
 pytest = '^8.0.0'
 pytest-timeout = '^2.2.0'
+pytest-cov = '^2.2.0'
+
+[tool.poetry.group.mypy.dependencies]
+types-requests = '^2.31.0'
+types-freezegun = '^1.1.0'
+# types-hypothesis = '^x'
+# types-pytest = '^x'
 
 [tool.poetry.group.docs.dependencies]
 readthedocs-sphinx-search = "^0.3.2"

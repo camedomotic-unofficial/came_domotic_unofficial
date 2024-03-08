@@ -57,12 +57,11 @@ jobs:
         pip install flake8 black mypy
 
     - name: Check formatting with black
-      run: black . --check
+      run: black came_domotic_unofficial --check
       # uses: psf/black@stable
       
     - name: Run mypy
-      run: mypy .
-    #   run: mypy came_domotic_unofficial
+      run: mypy came_domotic_unofficial
 
     - name: Run pylint      
       run: pylint --disable=W,R,C came_domotic_unofficial
