@@ -174,6 +174,28 @@ To keep up with the latest improvements and updates, visit our
 page. The release notes are updated with each new version, ensuring you're always
 informed about new features and fixes.
 
+Versioning Strategy
+-------------------
+
+Our project adheres to `Semantic Versioning (SemVer) <https://semver.org/>`_ to ensure
+clarity and predictability in our release process. Our version numbers are structured
+as MAJOR.MINOR.PATCH, incrementing:
+
+- The MAJOR version when making incompatible API changes,
+- The MINOR version when adding functionality in a backward-compatible manner, and
+- The PATCH version when making backward-compatible bug fixes.
+
+Post Releases
+^^^^^^^^^^^^^
+
+In addition to the standard SemVer approach, we utilize post-release versions for
+immediate fixes or minor changes that do not warrant a full version increment, denoted
+as `1.2.3post1`. This allows us to rapidly deploy necessary fixes or adjustments.
+
+For more details on our versioning strategy and how contributions are managed, please
+see our `Contribute to the Project <https://came-domotic-unofficial.readthedocs.io/en/latest/contributing.html>`_
+page.
+
 Contributing
 ------------
 We welcome contributions! For guidelines on how to help, see
