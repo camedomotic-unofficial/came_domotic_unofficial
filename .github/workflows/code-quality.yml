@@ -24,7 +24,7 @@ on:
       - 'mypy.ini'
       - 'requirements.txt'
       - '.github/workflows/code-quality.yml'
-      pull_request:
+  pull_request:
     branches: [main]
     paths:
       - '**.py'
@@ -33,7 +33,7 @@ on:
       - 'mypy.ini'
       - 'requirements.txt'
       - '.github/workflows/code-quality.yml'
-      schedule:
+  schedule:
     # At 06:30 on day-of-month 24.
     - cron: '30 6 24 * *'
   workflow_dispatch:
