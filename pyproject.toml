@@ -53,7 +53,7 @@ packages = [{ include = "came_domotic_unofficial" }]
 python = '^3.12'
 requests = '^2.31.0'
 
-[tool.poetry.group.test.dependencies]
+[tool.poetry.group.tests.dependencies]
 freezegun = '^1.4.0'
 hypothesis = '^6.98.17'
 pytest = '^8.0.2'

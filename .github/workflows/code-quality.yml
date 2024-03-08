@@ -61,13 +61,13 @@ jobs:
       run: poetry install --only code-quality
 
     - name: Check formatting with black
-      run: black came_domotic_unofficial --check
+      run: poetry run black came_domotic_unofficial --check
       
     - name: Run mypy
-      run: mypy came_domotic_unofficial
+      run: poetry run mypy came_domotic_unofficial
 
     - name: Run pylint      
-      run: pylint --disable=W,R,C came_domotic_unofficial
+      run: poetry run pylint --disable=W,R,C came_domotic_unofficial
 
     # - name: Run flake8    
     #   # The Black formatter uses 88 chars wide lines and conflicts whit E203
