@@ -62,8 +62,8 @@ pytest-timeout = '^2.3.1'
 
 [tool.poetry.group.code-quality.dependencies]
 black = '^24.2.0'
-mypy = '^1.8.0'
 pylint = '^3.1.0'
+mypy = '^1.8.0'
 types-requests = '^2.31.0'
 
 [tool.poetry.group.docs.dependencies]

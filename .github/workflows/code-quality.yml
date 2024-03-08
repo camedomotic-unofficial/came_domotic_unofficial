@@ -58,7 +58,7 @@ jobs:
         pipx install poetry
 
     - name: Install package and its dependencies
-      run: poetry install --extras "code-quality"
+      run: poetry install --only code-quality
 
     - name: Check formatting with black
       run: black came_domotic_unofficial --check

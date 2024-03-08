@@ -43,7 +43,7 @@ jobs:
         pipx install poetry
 
     - name: Install package and its dependencies
-      run: poetry install --extras "test"
+      run: poetry install --only tests
 
     - name: Run pytest with coverage
       run: pytest --timeout 10 --cov=came_domotic_unofficial --cov-report xml --cov-report term-missing
