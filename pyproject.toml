@@ -56,20 +56,20 @@ requests = '^2.31.0'
 [tool.poetry.group.test.dependencies]
 freezegun = '^1.4.0'
 hypothesis = '^6.98.17'
-pytest = '^8.0.0'
-pytest-timeout = '^2.2.0'
-pytest-cov = '^2.2.0'
+pytest = '^8.0.2'
+pytest-cov = '^4.1.0'
+pytest-timeout = '^2.3.1'
 
-[tool.poetry.group.mypy.dependencies]
+[tool.poetry.group.code_quality.dependencies]
+black = '^24.2.0'
+mypy = '^1.8.0'
+pylint = '^3.1.0'
 types-requests = '^2.31.0'
-# types-freezegun = '^1.1.0'
-# types-hypothesis = '^x'
-# types-pytest = '^x'
 
 [tool.poetry.group.docs.dependencies]
-readthedocs-sphinx-search = "^0.3.2"
 sphinx = "^7.2.6"
 sphinx_rtd_theme = "^2.0.0"
+readthedocs-sphinx-search = "^0.3.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
