@@ -60,7 +60,7 @@ pytest = '^8.0.2'
 pytest-cov = '^4.1.0'
 pytest-timeout = '^2.3.1'
 
-[tool.poetry.group.code_quality.dependencies]
+[tool.poetry.group.code-quality.dependencies]
 black = '^24.2.0'
 mypy = '^1.8.0'
 pylint = '^3.1.0'
