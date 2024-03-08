@@ -6,5 +6,5 @@ adding new features, fixing bugs, or improving documentation, your help is great
 appreciated.
 
 Please see the
-`contributing guidelines on GitHub <https://github.com/CAME-Domotic-unofficial/came_domotic_unofficial/blob/main/CONTRIBUTING.md>`_
+`contributing guidelines on GitHub <https://github.com/camedomotic-unofficial/came_domotic_unofficial/blob/main/CONTRIBUTING.md>`_
 for detailed instructions on how to get started.
