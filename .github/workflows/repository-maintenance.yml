@@ -19,7 +19,7 @@ name: 'Repository maintenance scheduled tasks'
 
 on:
   schedule:
-    - cron: '33 7 * * 3'
+    - cron: '33 7 26 * *'
   workflow_dispatch:
 
 permissions:
@@ -31,33 +31,10 @@ concurrency:
   group: project-maintenance-jobs
 
 jobs:
-  # lock-inactive-threads:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Lock inactive threads
-  #       uses: dessant/lock-threads@v5
-  #       with:
-  #           issue-inactive-days: '90'
-  #           pr-inactive-days: '90'
-  #           discussion-inactive-days: '90'
-  #           add-issue-labels: 'locked'
-  #           add-pr-labels: 'locked'
-  #           add-discussion-labels: 'locked'
-  #           issue-comment: >
-  #               This item has been automatically locked due to inactivity.
-  #               Please unlock this thread if you have further questions or comments.
-  #           pr-comment: >
-  #               This item has been automatically locked due to inactivity.
-  #               Please unlock this thread if you have further questions or comments.
-  #           discussion-comment: >
-  #               This item has been automatically locked due to inactivity.
-  #               Please unlock this thread if you have further questions or comments.
-  #           log-output: true
-            
   stale:
     runs-on: ubuntu-latest
     steps:
-      - name: 180 days stale policy
+      - name: Apply stale policy
         uses: actions/stale@v7
         with:
           days-before-stale: 90
