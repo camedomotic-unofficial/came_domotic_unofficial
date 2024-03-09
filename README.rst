@@ -20,25 +20,25 @@
     :target: https://python.org
     :alt: Python 3.12 | 3.13
 
-.. image:: https://github.com/camedomotic-unofficial/came_domotic_unofficial/actions/workflows/code-quality.yml/badge.svg
-   :target: https://github.com/camedomotic-unofficial/came_domotic_unofficial/actions/workflows/code-quality.yml
-   :alt: Code quality check
+.. .. image:: https://github.com/camedomotic-unofficial/came_domotic_unofficial/actions/workflows/code-quality.yml/badge.svg
+..    :target: https://github.com/camedomotic-unofficial/came_domotic_unofficial/actions/workflows/code-quality.yml
+..    :alt: Code quality check
 
-.. image:: https://github.com/camedomotic-unofficial/came_domotic_unofficial/actions/workflows/github-code-scanning/codeql/badge.svg
-    :target: https://github.com/camedomotic-unofficial/came_domotic_unofficial/actions/workflows/github-code-scanning/codeql
-    :alt: CodeQL
+.. .. image:: https://github.com/camedomotic-unofficial/came_domotic_unofficial/actions/workflows/github-code-scanning/codeql/badge.svg
+..     :target: https://github.com/camedomotic-unofficial/came_domotic_unofficial/actions/workflows/github-code-scanning/codeql
+..     :alt: CodeQL
 
 .. image:: https://sonarcloud.io/api/project_badges/measure?project=camedomotic-unofficial_came_domotic_unofficial&metric=security_rating
    :target: https://sonarcloud.io/project/overview?id=camedomotic-unofficial_came_domotic_unofficial
    :alt: SonarCloud - Security Rating
 
-.. image:: https://sonarcloud.io/api/project_badges/measure?project=camedomotic-unofficial_came_domotic_unofficial&metric=sqale_rating
-   :target: https://sonarcloud.io/project/overview?id=camedomotic-unofficial_came_domotic_unofficial
-   :alt: SonarCloud - Maintainability Rating
+.. .. image:: https://sonarcloud.io/api/project_badges/measure?project=camedomotic-unofficial_came_domotic_unofficial&metric=sqale_rating
+..    :target: https://sonarcloud.io/project/overview?id=camedomotic-unofficial_came_domotic_unofficial
+..    :alt: SonarCloud - Maintainability Rating
 
-.. image:: https://codecov.io/gh/camedomotic-unofficial/came_domotic_unofficial/graph/badge.svg?token=0QSJYP7EP3 
-   :target: https://codecov.io/gh/camedomotic-unofficial/came_domotic_unofficial
-   :alt: Code coverage
+.. .. image:: https://codecov.io/gh/camedomotic-unofficial/came_domotic_unofficial/graph/badge.svg?token=0QSJYP7EP3 
+..    :target: https://codecov.io/gh/camedomotic-unofficial/came_domotic_unofficial
+..    :alt: Code coverage
 
 .. image:: https://sonarcloud.io/api/project_badges/measure?project=camedomotic-unofficial_came_domotic_unofficial&metric=vulnerabilities
    :target: https://sonarcloud.io/project/overview?id=camedomotic-unofficial_came_domotic_unofficial
