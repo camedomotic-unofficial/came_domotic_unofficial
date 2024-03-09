@@ -22,12 +22,14 @@ on:
     branches:
       - main  # Trigger on pushes to the main branch
     paths:
+      - README.rst
       - 'docs/**'  # Trigger only when documentation changes
       - '.readthedocs.yaml'  # Also trigger when RTD configuration changes
   pull_request:
     branches:
       - main
     paths:
+      - README.rst
       - 'docs/**'
       - '.readthedocs.yaml'
   workflow_dispatch:  # Allow manual triggering of the workflow
