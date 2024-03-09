@@ -20,6 +20,21 @@ name: Build and publish
 on:
   workflow_dispatch:
     inputs:
+      version:
+        description: 'Version update type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - prepatch # update patch number and adds a0
+          - preminor # update minor number and adds a0
+          - premajor # update major number and adds a0
+          - prerelease # if final updates patch and adds a0, otherwise add +1 to the pre-release number
+          - prerelease –next-phase # steps a > b > rc > final
+          - none
+        default: none
       publish_to_test:
         description: 'Publish to test?'
         required: true
@@ -38,6 +53,9 @@ jobs:
   build_test:
     if: ${{ github.event.inputs.publish_to_test || github.event.inputs.publish_to_production}}
     environment: test
+    permissions:
+      contents: write  # Needed to update the version number in pyproject.toml
+    
     runs-on: ubuntu-latest
 
     steps:
@@ -58,6 +76,19 @@ jobs:
   
       - name: Validate pyproject.toml
         run: poetry check
+
+      - name: Update version
+        if: ${{ github.event.inputs.version != 'none' }}
+        run: |
+          poetry version ${{ github.event.inputs.version }}
+          version=$(poetry version -s)
+          echo "version=$version" >> $GITHUB_OUTPUT
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add pyproject.toml
+          git commit -m "chore: bump version to $version"
+          git tag $version
+          git push origin --tags
 
       - name: Install package dependencies    
         run: poetry install --no-root
@@ -82,7 +113,6 @@ jobs:
     permissions:
       # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
-
     steps:
       - name: Download built package
         uses: actions/download-artifact@v4
@@ -100,7 +130,6 @@ jobs:
     needs: build_test
     environment: production
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -136,7 +165,7 @@ jobs:
           overwrite: true
         
   publish_production:
-    needs: build_production
+    needs: [build_test, build_production]
     if: ${{ github.event.inputs.publish_to_production }}
     environment: pypi
     runs-on: ubuntu-latest
@@ -153,4 +182,11 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.build_test.outputs.version }}
+          draft: true
+          generate_release_notes: true # see https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes
+          make_latest: true
