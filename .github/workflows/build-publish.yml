@@ -51,7 +51,7 @@ permissions:
 
 jobs:
   build_test:
-    if: ${{ github.event.inputs.publish_to_test == 'true' || github.event.inputs.publish_to_production  == 'true' }}
+    if: ${{ github.event.inputs.publish_to_test || github.event.inputs.publish_to_production  }}
     environment: test
     permissions:
       contents: write  # Needed to update the version number in pyproject.toml
@@ -59,6 +59,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Debug
+        run: |
+          echo "if condition > ${{ github.event.inputs.publish_to_test || github.event.inputs.publish_to_production  }}"
+          echo "test > ${{ github.event.inputs.publish_to_test }}"
+          echo "prod > ${{ github.event.inputs.publish_to_production  }}"
+          echo "test == true > ${{ github.event.inputs.publish_to_test == true }}"
+          echo "test == 'true' > ${{ github.event.inputs.publish_to_test == 'true'}}"
+
       - name: Check out repository
         uses: actions/checkout@v4
   
