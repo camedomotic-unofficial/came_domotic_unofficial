@@ -61,3 +61,6 @@ jobs:
     - name: Build documentation with Sphinx
       run: |
         sphinx-build -b html docs/source/ docs/build/html
+
+
+      # TODO sphinx-build -b linkcheck . _build/linkcheck
