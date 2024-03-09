@@ -20,6 +20,14 @@
     :target: https://python.org
     :alt: Python 3.12 | 3.13
 
+.. image:: https://github.com/camedomotic-unofficial/came_domotic_unofficial/actions/workflows/code-quality.yml/badge.svg
+   :target: https://github.com/camedomotic-unofficial/came_domotic_unofficial/actions/workflows/code-quality.yml
+   :alt: Code quality check
+
+.. image:: https://github.com/camedomotic-unofficial/came_domotic_unofficial/actions/workflows/github-code-scanning/codeql/badge.svg
+    :target: https://github.com/camedomotic-unofficial/came_domotic_unofficial/actions/workflows/github-code-scanning/codeql
+    :alt: CodeQL
+
 .. image:: https://sonarcloud.io/api/project_badges/measure?project=camedomotic-unofficial_came_domotic_unofficial&metric=security_rating
    :target: https://sonarcloud.io/project/overview?id=camedomotic-unofficial_came_domotic_unofficial
    :alt: SonarCloud - Security Rating
@@ -43,10 +51,6 @@
 .. image:: https://readthedocs.org/projects/came-domotic-unofficial/badge/?version=latest
    :target: https://came-domotic-unofficial.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation status
-
-.. .. image:: https://github.com/CAME-Domotic-unofficial/came_domotic_unofficial/actions/workflows/check_code.yml/badge.svg?branch=main
-..    :target: https://github.com/CAME-Domotic-unofficial/came_domotic_unofficial/actions/workflows/check_code.yml?branch=main
-..    :alt: Build status
 
 .. .. image:: https://img.shields.io/badge/license-Apache%202.0-blue.svg
 ..    :target: https://opensource.org/licenses/Apache-2.0
@@ -83,16 +87,6 @@
 .. .. image:: https://pepy.tech/badge/came_domotic_unofficial
 ..    :target: https://pepy.tech/project/came_domotic_unofficial
 ..    :alt: Downloads
-
-
-.. Code Quality - A badge from services like Codacy, Code Climate, or SonarCloud that
-.. assesses the quality of your code based on various metrics. This can help indicate
-.. the maintainability and cleanliness of your code.
-
-
-.. Dependencies - Indicates the status of dependencies used by your project, possibly
-.. showing if any dependencies are out-of-date or have known vulnerabilities, using
-.. tools like Dependabot or Snyk.
 
 Welcome!
 ========
