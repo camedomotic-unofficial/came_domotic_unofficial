@@ -51,7 +51,7 @@ permissions:
 
 jobs:
   build_test:
-    if: ${{ github.event.inputs.publish_to_test || github.event.inputs.publish_to_production }}
+    if: ${{ github.event.inputs.publish_to_test == 'true' || github.event.inputs.publish_to_production == 'true' }}
     environment: test
     permissions:
       contents: write  # Needed to update the version number in pyproject.toml
@@ -95,8 +95,9 @@ jobs:
           git config user.email "actions@github.com"
           git add pyproject.toml
           git commit -m "chore: bump version to $version"
+          git push origin main
           git tag $version
-          git push origin --tags
+          git push origin main --tags
 
       - name: Install package dependencies    
         run: poetry install --no-root
