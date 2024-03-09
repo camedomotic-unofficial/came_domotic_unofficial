@@ -17,5 +17,5 @@ API Reference
 
 .. automodule:: came_domotic_unofficial
    :members:
-   :undoc-members:
-   :show-inheritance:
+..    :undoc-members:
+..    :show-inheritance:

@@ -6,6 +6,13 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import os
+import sys
+
+module_path = os.path.abspath("../../")
+print(module_path)
+sys.path.insert(0, module_path)
+
 project = "CAME Domotic unofficial"
 copyright = "2024, CAME Domotic Unofficial team"
 author = "fredericks1982"
@@ -13,6 +20,7 @@ release = "1.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
+
 
 extensions = [
     "sphinx.ext.autodoc",
