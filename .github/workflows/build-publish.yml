@@ -51,7 +51,7 @@ permissions:
 
 jobs:
   build_test:
-    if: ${{ github.event.inputs.publish_to_test || github.event.inputs.publish_to_production}}
+    if: ${{ github.event.inputs.publish_to_test == 'true' || github.event.inputs.publish_to_production  == 'true' }}
     environment: test
     permissions:
       contents: write  # Needed to update the version number in pyproject.toml
@@ -107,7 +107,7 @@ jobs:
 
   publish_test:
     needs: build_test
-    if: ${{ github.event.inputs.publish_to_test }}
+    if: ${{ github.event.inputs.publish_to_test == 'true' }}
     environment: testpypi
     runs-on: ubuntu-latest
     permissions:
@@ -126,7 +126,7 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
 
   build_production:
-    if: ${{ github.event.inputs.publish_to_production }}
+    if: ${{ github.event.inputs.publish_to_production == 'true' }}
     needs: build_test
     environment: production
     runs-on: ubuntu-latest
@@ -166,7 +166,7 @@ jobs:
         
   publish_production:
     needs: [build_test, build_production]
-    if: ${{ github.event.inputs.publish_to_production }}
+    if: ${{ github.event.inputs.publish_to_production == 'true' }}
     environment: pypi
     runs-on: ubuntu-latest
     permissions:
