@@ -16,9 +16,9 @@
    :target: https://pypi.org/project/came_domotic_unofficial/
    :alt: PyPI version
 
-.. image:: https://img.shields.io/badge/python-3.12%20|%203.13-blue.svg
-    :target: https://python.org
-    :alt: Python 3.12 | 3.13
+.. image:: https://img.shields.io/badge/python-3.12-417fb0.svg
+    :target: https://www.python.org
+    :alt: Python 3.12
 
 .. .. image:: https://github.com/camedomotic-unofficial/came_domotic_unofficial/actions/workflows/code-quality.yml/badge.svg
 ..    :target: https://github.com/camedomotic-unofficial/came_domotic_unofficial/actions/workflows/code-quality.yml
@@ -164,7 +164,7 @@ For **more detailed usage examples**, see
 What's New
 ----------
 To keep up with the latest improvements and updates, visit our 
-`GitHub Releases <https://github.com/CAME-Domotic-unofficial/came_domotic_unofficial/releases>`_
+`GitHub Releases <https://github.com/camedomotic-unofficial/came_domotic_unofficial/releases>`_
 page. The release notes are updated with each new version, ensuring you're always
 informed about new features and fixes.
 
@@ -204,5 +204,5 @@ facilitated the development of this library.
 License
 -------
 This project is licensed under the Apache License 2.0. For more details, see the
-`LICENSE <https://github.com/CAME-Domotic-unofficial/came_domotic_unofficial/blob/main/LICENSE>`_
+`LICENSE <https://github.com/camedomotic-unofficial/came_domotic_unofficial/blob/main/LICENSE>`_
 file.
