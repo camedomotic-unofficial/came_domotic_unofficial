@@ -17,11 +17,6 @@ name: Security checks
 on:
   push:
     branches: [ main ]
-    paths:
-      - '**.py'
-      - 'pyproject.toml'
-      - 'requirements.txt'
-      - '.github/workflows/security.yml'
     paths-ignore:
       - '**.rst'
       - '**.md'
@@ -29,11 +24,6 @@ on:
       - '.github/**'
   pull_request:
     branches: [ main ]
-    paths:
-      - '**.py'
-      - 'pyproject.toml'
-      - 'requirements.txt'
-      - '.github/workflows/security.yml'
     paths-ignore:
       - '**.rst'
       - '**.md'
@@ -43,7 +33,6 @@ on:
     # Twice per month (7th and 22nd) at 5:45 AM UTC
     - cron: '45 5 7 * *'
     - cron: '45 5 22 * *'
-
 
 jobs:
   security:
