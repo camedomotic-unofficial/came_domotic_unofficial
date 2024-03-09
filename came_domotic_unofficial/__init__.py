@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-"""
+"""TEST
 This library allows to interact with a CAME ETI/Domo server.
 
 The login to the remote server is managed by the library, and performed only
@@ -66,7 +66,9 @@ _LOGGER.setLevel(logging.DEBUG)
 
 def get_logger():
     """
-    Returns the package logger, allowing to reconfigure it
-    from the main program.
+    Allows to set the log level and other properties from the calling code.
+
+    Returns:
+        Logger: The package logger
     """
     return _LOGGER
